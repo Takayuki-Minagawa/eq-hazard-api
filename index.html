@@ -9,314 +9,97 @@
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
     <style>
-        /* ===== CSS Custom Properties (Light / Dark) ===== */
+        /* ===== CSS Custom Properties ===== */
         :root {
-            --bg-body: #f0f2f5;
-            --bg-panel: #ffffff;
-            --bg-header: linear-gradient(135deg, #1a365d 0%, #2c5282 100%);
-            --bg-table-th: #f7fafc;
-            --bg-input: #ffffff;
-            --bg-status-info: #ebf8ff;
-            --bg-status-loading: #fffff0;
-            --bg-status-success: #f0fff4;
-            --bg-status-error: #fff5f5;
-            --bg-overlay: rgba(255,255,255,0.85);
-            --text-primary: #333333;
-            --text-secondary: #4a5568;
-            --text-muted: #718096;
-            --text-faint: #a0aec0;
-            --text-header-sub: #bee3f8;
-            --border-color: #e2e8f0;
-            --border-input: #cbd5e0;
-            --accent: #3182ce;
-            --accent-hover: #2b6cb0;
-            --chart-grid: rgba(0,0,0,0.06);
-            --chart-text: #666666;
-            --panel-h2: #1a365d;
-            --spinner-track: #e2e8f0;
-            --placeholder-border: #e2e8f0;
-            --shadow-panel: 0 1px 4px rgba(0,0,0,0.08);
+            --bg-body:#f0f2f5;--bg-panel:#fff;--bg-header:linear-gradient(135deg,#1a365d 0%,#2c5282 100%);
+            --bg-table-th:#f7fafc;--bg-input:#fff;--bg-overlay:rgba(255,255,255,.85);
+            --bg-status-info:#ebf8ff;--bg-status-loading:#fffff0;--bg-status-success:#f0fff4;--bg-status-error:#fff5f5;
+            --text-primary:#333;--text-secondary:#4a5568;--text-muted:#718096;--text-faint:#a0aec0;--text-header-sub:#bee3f8;
+            --border-color:#e2e8f0;--border-input:#cbd5e0;--accent:#3182ce;--accent-hover:#2b6cb0;
+            --chart-grid:rgba(0,0,0,.06);--panel-h2:#1a365d;--spinner-track:#e2e8f0;
+            --placeholder-border:#e2e8f0;--shadow-panel:0 1px 4px rgba(0,0,0,.08);
+            --tag-bg:#edf2f7;--tag-text:#4a5568;--danger:#e53e3e;--safe:#38a169;
+            --row-hover:#f7fafc;--badge-sub-bg:#fef3c7;--badge-sub-text:#92400e;--badge-cru-bg:#dbeafe;--badge-cru-text:#1e40af;
         }
         body.dark {
-            --bg-body: #0f172a;
-            --bg-panel: #1e293b;
-            --bg-header: linear-gradient(135deg, #0f172a 0%, #1e3a5f 100%);
-            --bg-table-th: #283548;
-            --bg-input: #2d3a4d;
-            --bg-status-info: #1a2744;
-            --bg-status-loading: #2d2a1a;
-            --bg-status-success: #1a2e22;
-            --bg-status-error: #2e1a1a;
-            --bg-overlay: rgba(15,23,42,0.85);
-            --text-primary: #e2e8f0;
-            --text-secondary: #cbd5e0;
-            --text-muted: #94a3b8;
-            --text-faint: #64748b;
-            --text-header-sub: #7db8e0;
-            --border-color: #334155;
-            --border-input: #475569;
-            --accent: #60a5fa;
-            --accent-hover: #3b82f6;
-            --chart-grid: rgba(255,255,255,0.08);
-            --chart-text: #94a3b8;
-            --panel-h2: #93c5fd;
-            --spinner-track: #334155;
-            --placeholder-border: #334155;
-            --shadow-panel: 0 1px 4px rgba(0,0,0,0.3);
+            --bg-body:#0f172a;--bg-panel:#1e293b;--bg-header:linear-gradient(135deg,#0f172a 0%,#1e3a5f 100%);
+            --bg-table-th:#283548;--bg-input:#2d3a4d;--bg-overlay:rgba(15,23,42,.85);
+            --bg-status-info:#1a2744;--bg-status-loading:#2d2a1a;--bg-status-success:#1a2e22;--bg-status-error:#2e1a1a;
+            --text-primary:#e2e8f0;--text-secondary:#cbd5e0;--text-muted:#94a3b8;--text-faint:#64748b;--text-header-sub:#7db8e0;
+            --border-color:#334155;--border-input:#475569;--accent:#60a5fa;--accent-hover:#3b82f6;
+            --chart-grid:rgba(255,255,255,.08);--panel-h2:#93c5fd;--spinner-track:#334155;
+            --placeholder-border:#334155;--shadow-panel:0 1px 4px rgba(0,0,0,.3);
+            --tag-bg:#334155;--tag-text:#cbd5e0;--danger:#fc8181;--safe:#68d391;
+            --row-hover:#283548;--badge-sub-bg:#451a03;--badge-sub-text:#fcd34d;--badge-cru-bg:#1e3a5f;--badge-cru-text:#93c5fd;
         }
-
-        /* ===== Base ===== */
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body {
-            font-family: "Hiragino Sans", "Yu Gothic", "Meiryo", sans-serif;
-            background: var(--bg-body);
-            color: var(--text-primary);
-            transition: background 0.3s, color 0.3s;
-        }
-
-        /* ===== Header ===== */
-        header {
-            background: var(--bg-header);
-            color: #fff;
-            padding: 12px 24px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.15);
-        }
-        .header-inner {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            max-width: 1440px;
-            margin: 0 auto;
-            gap: 12px;
-        }
-        header h1 { font-size: 1.25rem; font-weight: 700; }
-        header p { font-size: 0.8rem; color: var(--text-header-sub); margin-top: 2px; }
-        .header-controls { display: flex; gap: 8px; flex-shrink: 0; }
-        .btn-header {
-            padding: 5px 14px;
-            background: rgba(255,255,255,0.15);
-            color: #fff;
-            border: 1px solid rgba(255,255,255,0.3);
-            border-radius: 4px;
-            font-size: 0.8rem;
-            cursor: pointer;
-            transition: background 0.2s;
-            white-space: nowrap;
-        }
-        .btn-header:hover { background: rgba(255,255,255,0.25); }
-
-        /* ===== Grid Layout ===== */
-        .main-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 16px;
-            padding: 16px;
-            max-width: 1440px;
-            margin: 0 auto;
-        }
-        .panel {
-            background: var(--bg-panel);
-            border-radius: 8px;
-            box-shadow: var(--shadow-panel);
-            padding: 16px;
-            transition: background 0.3s, box-shadow 0.3s;
-        }
-        .panel h2 {
-            font-size: 0.95rem;
-            color: var(--panel-h2);
-            border-left: 4px solid var(--accent);
-            padding-left: 10px;
-            margin-bottom: 12px;
-        }
-
-        /* ===== Map ===== */
-        .map-panel { grid-column: 1; }
-        #map {
-            height: 420px;
-            border-radius: 6px;
-            border: 1px solid var(--border-color);
-            cursor: crosshair;
-        }
-
-        /* ===== Info ===== */
-        .info-panel { grid-column: 2; }
-        .coord-inputs {
-            display: grid;
-            grid-template-columns: 1fr 1fr auto;
-            gap: 8px;
-            align-items: end;
-            margin-bottom: 16px;
-        }
-        .coord-inputs label {
-            display: block;
-            font-size: 0.78rem;
-            color: var(--text-muted);
-            margin-bottom: 3px;
-        }
-        .coord-inputs input {
-            width: 100%;
-            padding: 7px 10px;
-            border: 1px solid var(--border-input);
-            border-radius: 4px;
-            font-size: 0.9rem;
-            background: var(--bg-input);
-            color: var(--text-primary);
-            transition: background 0.3s, border-color 0.3s, color 0.3s;
-        }
-        .coord-inputs input:focus {
-            outline: none;
-            border-color: var(--accent);
-            box-shadow: 0 0 0 2px rgba(49,130,206,0.2);
-        }
-        .btn {
-            padding: 7px 16px;
-            background: var(--accent);
-            color: #fff;
-            border: none;
-            border-radius: 4px;
-            font-size: 0.85rem;
-            cursor: pointer;
-            white-space: nowrap;
-            transition: background 0.2s;
-        }
-        .btn:hover { background: var(--accent-hover); }
-        .btn:disabled { background: #a0aec0; cursor: not-allowed; }
-
-        .info-table {
-            width: 100%;
-            border-collapse: collapse;
-            font-size: 0.88rem;
-            margin-bottom: 12px;
-        }
-        .info-table th {
-            text-align: left;
-            padding: 6px 10px;
-            background: var(--bg-table-th);
-            color: var(--text-secondary);
-            font-weight: 600;
-            width: 40%;
-            border-bottom: 1px solid var(--border-color);
-            transition: background 0.3s, color 0.3s;
-        }
-        .info-table td {
-            padding: 6px 10px;
-            border-bottom: 1px solid var(--border-color);
-        }
-
-        #status {
-            padding: 10px 14px;
-            border-radius: 6px;
-            font-size: 0.85rem;
-            margin-top: 12px;
-            line-height: 1.5;
-            transition: background 0.3s, color 0.3s;
-        }
-        .status-info    { background: var(--bg-status-info);    color: #2b6cb0; }
-        .status-loading { background: var(--bg-status-loading); color: #b7791f; }
-        .status-success { background: var(--bg-status-success); color: #276749; }
-        .status-error   { background: var(--bg-status-error);   color: #c53030; }
-        body.dark .status-info    { color: #90cdf4; }
-        body.dark .status-loading { color: #fbd38d; }
-        body.dark .status-success { color: #9ae6b4; }
-        body.dark .status-error   { color: #feb2b2; }
-
-        /* ===== Download Section ===== */
-        .download-section {
-            display: none;
-            margin-top: 14px;
-            padding-top: 14px;
-            border-top: 1px solid var(--border-color);
-        }
-        .download-section.visible { display: block; }
-        .download-section h3 {
-            font-size: 0.82rem;
-            color: var(--text-muted);
-            margin-bottom: 8px;
-        }
-        .download-btns {
-            display: flex;
-            gap: 8px;
-            flex-wrap: wrap;
-        }
-        .btn-dl {
-            padding: 6px 14px;
-            background: transparent;
-            color: var(--accent);
-            border: 1px solid var(--accent);
-            border-radius: 4px;
-            font-size: 0.82rem;
-            cursor: pointer;
-            transition: background 0.2s, color 0.2s;
-            white-space: nowrap;
-        }
-        .btn-dl:hover {
-            background: var(--accent);
-            color: #fff;
-        }
-
-        .api-note {
-            font-size: 0.75rem;
-            color: var(--text-faint);
-            margin-top: 16px;
-            line-height: 1.6;
-        }
-        .api-note a { color: var(--text-muted); }
-
-        /* ===== Charts ===== */
-        .chart-panel { grid-column: 1 / -1; }
-        .charts-row {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 20px;
-        }
-        .chart-wrapper h3 {
-            font-size: 0.88rem;
-            color: var(--text-secondary);
-            text-align: center;
-            margin-bottom: 8px;
-        }
-        .chart-container {
-            position: relative;
-            height: 420px;
-        }
-        .chart-placeholder {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            height: 420px;
-            color: var(--text-faint);
-            font-size: 0.9rem;
-            border: 2px dashed var(--placeholder-border);
-            border-radius: 6px;
-        }
-
-        /* ===== Loading ===== */
-        .loading-overlay {
-            display: none;
-            position: absolute;
-            inset: 0;
-            background: var(--bg-overlay);
-            align-items: center;
-            justify-content: center;
-            border-radius: 6px;
-            z-index: 10;
-        }
-        .loading-overlay.active { display: flex; }
-        .spinner {
-            width: 36px; height: 36px;
-            border: 3px solid var(--spinner-track);
-            border-top-color: var(--accent);
-            border-radius: 50%;
-            animation: spin 0.7s linear infinite;
-        }
-        @keyframes spin { to { transform: rotate(360deg); } }
-
-        /* ===== Responsive ===== */
-        @media (max-width: 960px) {
-            .main-grid { grid-template-columns: 1fr; }
-            .map-panel, .info-panel, .chart-panel { grid-column: 1; }
-            .charts-row { grid-template-columns: 1fr; }
-            .header-inner { flex-wrap: wrap; }
+        *{margin:0;padding:0;box-sizing:border-box}
+        body{font-family:"Hiragino Sans","Yu Gothic","Meiryo",sans-serif;background:var(--bg-body);color:var(--text-primary);transition:background .3s,color .3s}
+        header{background:var(--bg-header);color:#fff;padding:12px 24px;box-shadow:0 2px 8px rgba(0,0,0,.15)}
+        .header-inner{display:flex;align-items:center;justify-content:space-between;max-width:1440px;margin:0 auto;gap:12px}
+        header h1{font-size:1.25rem;font-weight:700} header p{font-size:.8rem;color:var(--text-header-sub);margin-top:2px}
+        .header-controls{display:flex;gap:8px;flex-shrink:0}
+        .btn-header{padding:5px 14px;background:rgba(255,255,255,.15);color:#fff;border:1px solid rgba(255,255,255,.3);border-radius:4px;font-size:.8rem;cursor:pointer;transition:background .2s;white-space:nowrap}
+        .btn-header:hover{background:rgba(255,255,255,.25)}
+        .main-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;padding:16px;max-width:1440px;margin:0 auto}
+        .panel{background:var(--bg-panel);border-radius:8px;box-shadow:var(--shadow-panel);padding:16px;transition:background .3s,box-shadow .3s}
+        .panel h2{font-size:.95rem;color:var(--panel-h2);border-left:4px solid var(--accent);padding-left:10px;margin-bottom:12px}
+        .map-panel{grid-column:1} .info-panel{grid-column:2}
+        #map{height:420px;border-radius:6px;border:1px solid var(--border-color);cursor:crosshair}
+        .coord-inputs{display:grid;grid-template-columns:1fr 1fr auto;gap:8px;align-items:end;margin-bottom:16px}
+        .coord-inputs label{display:block;font-size:.78rem;color:var(--text-muted);margin-bottom:3px}
+        .coord-inputs input{width:100%;padding:7px 10px;border:1px solid var(--border-input);border-radius:4px;font-size:.9rem;background:var(--bg-input);color:var(--text-primary);transition:background .3s,border-color .3s,color .3s}
+        .coord-inputs input:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 2px rgba(49,130,206,.2)}
+        .btn{padding:7px 16px;background:var(--accent);color:#fff;border:none;border-radius:4px;font-size:.85rem;cursor:pointer;white-space:nowrap;transition:background .2s}
+        .btn:hover{background:var(--accent-hover)} .btn:disabled{background:#a0aec0;cursor:not-allowed}
+        .info-table{width:100%;border-collapse:collapse;font-size:.88rem;margin-bottom:12px}
+        .info-table th{text-align:left;padding:6px 10px;background:var(--bg-table-th);color:var(--text-secondary);font-weight:600;width:40%;border-bottom:1px solid var(--border-color);transition:background .3s,color .3s}
+        .info-table td{padding:6px 10px;border-bottom:1px solid var(--border-color)}
+        #status{padding:10px 14px;border-radius:6px;font-size:.85rem;margin-top:12px;line-height:1.5;transition:background .3s,color .3s}
+        .status-info{background:var(--bg-status-info);color:#2b6cb0} .status-loading{background:var(--bg-status-loading);color:#b7791f}
+        .status-success{background:var(--bg-status-success);color:#276749} .status-error{background:var(--bg-status-error);color:#c53030}
+        body.dark .status-info{color:#90cdf4} body.dark .status-loading{color:#fbd38d} body.dark .status-success{color:#9ae6b4} body.dark .status-error{color:#feb2b2}
+        .download-section{display:none;margin-top:14px;padding-top:14px;border-top:1px solid var(--border-color)}
+        .download-section.visible{display:block}
+        .download-section h3{font-size:.82rem;color:var(--text-muted);margin-bottom:8px}
+        .download-btns{display:flex;gap:8px;flex-wrap:wrap}
+        .btn-dl{padding:6px 14px;background:transparent;color:var(--accent);border:1px solid var(--accent);border-radius:4px;font-size:.82rem;cursor:pointer;transition:background .2s,color .2s;white-space:nowrap}
+        .btn-dl:hover{background:var(--accent);color:#fff}
+        .api-note{font-size:.75rem;color:var(--text-faint);margin-top:16px;line-height:1.6}
+        .api-note a{color:var(--text-muted)}
+        /* Charts */
+        .chart-panel{grid-column:1/-1}
+        .charts-row{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+        .chart-wrapper h3{font-size:.88rem;color:var(--text-secondary);text-align:center;margin-bottom:8px}
+        .chart-container{position:relative;height:420px}
+        .chart-placeholder{display:flex;align-items:center;justify-content:center;height:420px;color:var(--text-faint);font-size:.9rem;border:2px dashed var(--placeholder-border);border-radius:6px}
+        .loading-overlay{display:none;position:absolute;inset:0;background:var(--bg-overlay);align-items:center;justify-content:center;border-radius:6px;z-index:10}
+        .loading-overlay.active{display:flex}
+        .spinner{width:36px;height:36px;border:3px solid var(--spinner-track);border-top-color:var(--accent);border-radius:50%;animation:spin .7s linear infinite}
+        @keyframes spin{to{transform:rotate(360deg)}}
+        /* Site Info */
+        .site-panel{grid-column:1/-1}
+        .site-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:20px}
+        .site-grid h3{font-size:.88rem;color:var(--text-secondary);margin-bottom:8px;padding-bottom:6px;border-bottom:1px solid var(--border-color)}
+        .site-placeholder{color:var(--text-faint);font-size:.85rem;padding:12px 0}
+        .landslide-yes{color:var(--danger);font-weight:700} .landslide-no{color:var(--safe);font-weight:700}
+        .intensity-val{font-weight:700;font-size:.95rem}
+        /* Fault Table */
+        .fault-panel{grid-column:1/-1}
+        .fault-table-wrap{max-height:400px;overflow-y:auto;border:1px solid var(--border-color);border-radius:6px}
+        .fault-table{width:100%;border-collapse:collapse;font-size:.84rem}
+        .fault-table thead{position:sticky;top:0;z-index:2}
+        .fault-table th{padding:8px 10px;background:var(--bg-table-th);color:var(--text-secondary);font-weight:600;border-bottom:1px solid var(--border-color);text-align:left;white-space:nowrap}
+        .fault-table td{padding:7px 10px;border-bottom:1px solid var(--border-color)}
+        .fault-table tbody tr:hover{background:var(--row-hover)}
+        .badge{display:inline-block;padding:2px 8px;border-radius:3px;font-size:.76rem;font-weight:600}
+        .badge-sub{background:var(--badge-sub-bg);color:var(--badge-sub-text)}
+        .badge-cru{background:var(--badge-cru-bg);color:var(--badge-cru-text)}
+        .fault-placeholder{color:var(--text-faint);font-size:.85rem;padding:20px;text-align:center}
+        @media(max-width:960px){
+            .main-grid{grid-template-columns:1fr}
+            .map-panel,.info-panel,.chart-panel,.site-panel,.fault-panel{grid-column:1}
+            .charts-row,.site-grid{grid-template-columns:1fr}
+            .header-inner{flex-wrap:wrap}
         }
     </style>
 </head>
@@ -364,24 +147,62 @@
             <div id="status" class="status-info" data-i18n="statusInit">
                 地図をクリック、または座標を入力して「取得」ボタンを押してください。
             </div>
-
-            <!-- Download -->
             <div class="download-section" id="downloadSection">
                 <h3 data-i18n="dlTitle">CSV ダウンロード</h3>
                 <div class="download-btns">
                     <button class="btn-dl" onclick="downloadRawCSV()" data-i18n="dlRaw">取得データ CSV</button>
                     <button class="btn-dl" onclick="downloadCalcCSV()" data-i18n="dlCalc">算定データ CSV</button>
+                    <button class="btn-dl" onclick="downloadSiteCSV()" data-i18n="dlSite">サイト情報 CSV</button>
                 </div>
             </div>
-
             <div class="api-note">
                 <span data-i18n="noteSource">データ出典:</span>
-                <a href="https://www.j-shis.bosai.go.jp/" target="_blank" rel="noopener">
-                    J-SHIS
-                </a>
+                <a href="https://www.j-shis.bosai.go.jp/" target="_blank" rel="noopener">J-SHIS</a>
                 <span data-i18n="noteOrg">（防災科学技術研究所）</span><br>
                 <span data-i18n="noteSpec">バージョン: Y2024 / 平均ケース(AVR) / 50年超過確率(T50)</span><br>
                 <span data-i18n="noteMetric">地震動指標: 工学的基盤最大速度 PBV [cm/s]</span>
+            </div>
+        </div>
+
+        <!-- Site Assessment -->
+        <div class="panel site-panel">
+            <h2 data-i18n="siteTitle">地盤・サイト評価情報</h2>
+            <div class="site-grid">
+                <!-- Ground Info -->
+                <div>
+                    <h3 data-i18n="groundTitle">表層地盤情報</h3>
+                    <div id="groundPlaceholder" class="site-placeholder" data-i18n="sitePlaceholder">地点を選択すると表示されます</div>
+                    <table class="info-table" id="groundTable" style="display:none;">
+                        <tr><th>Vs30</th><td id="dispVs30">-</td></tr>
+                        <tr><th data-i18n="thARV">地盤増幅率 (ARV)</th><td id="dispARV">-</td></tr>
+                        <tr><th data-i18n="thTopo">微地形区分</th><td id="dispTopo">-</td></tr>
+                        <tr><th data-i18n="thLandslide">地すべり地形</th><td id="dispLandslide">-</td></tr>
+                    </table>
+                </div>
+                <!-- Return Period -->
+                <div>
+                    <h3 data-i18n="returnTitle">再現期間別 計測震度</h3>
+                    <div id="returnPlaceholder" class="site-placeholder" data-i18n="sitePlaceholder">地点を選択すると表示されます</div>
+                    <table class="info-table" id="returnTable" style="display:none;">
+                        <tr><th data-i18n="rp500">500 年</th><td id="dispA500" class="intensity-val">-</td></tr>
+                        <tr><th data-i18n="rp1000">1,000 年</th><td id="dispA1000" class="intensity-val">-</td></tr>
+                        <tr><th data-i18n="rp5000">5,000 年</th><td id="dispA5000" class="intensity-val">-</td></tr>
+                        <tr><th data-i18n="rp10k">10,000 年</th><td id="dispA10K" class="intensity-val">-</td></tr>
+                        <tr><th data-i18n="rp50k">50,000 年</th><td id="dispA50K" class="intensity-val">-</td></tr>
+                        <tr><th data-i18n="rp100k">100,000 年</th><td id="dispA100K" class="intensity-val">-</td></tr>
+                    </table>
+                </div>
+                <!-- Hazard Summary -->
+                <div>
+                    <h3 data-i18n="probTitle">超過確率（50年・全地震）</h3>
+                    <div id="probPlaceholder" class="site-placeholder" data-i18n="sitePlaceholder">地点を選択すると表示されます</div>
+                    <table class="info-table" id="probTable" style="display:none;">
+                        <tr><th data-i18n="pI45">震度5弱以上</th><td id="dispI45" class="intensity-val">-</td></tr>
+                        <tr><th data-i18n="pI50">震度5強以上</th><td id="dispI50" class="intensity-val">-</td></tr>
+                        <tr><th data-i18n="pI55">震度6弱以上</th><td id="dispI55" class="intensity-val">-</td></tr>
+                        <tr><th data-i18n="pI60">震度6強以上</th><td id="dispI60" class="intensity-val">-</td></tr>
+                    </table>
+                </div>
             </div>
         </div>
 
@@ -393,9 +214,7 @@
                     <h3 data-i18n="chartCatTitle">カテゴリ別ハザードカーブ</h3>
                     <div style="position:relative;">
                         <div class="chart-container">
-                            <div class="chart-placeholder" id="placeholderCat" data-i18n="chartPlaceholder">
-                                地点を選択するとハザードカーブが表示されます
-                            </div>
+                            <div class="chart-placeholder" id="placeholderCat" data-i18n="chartPlaceholder">地点を選択するとハザードカーブが表示されます</div>
                             <canvas id="chartCategories" style="display:none;"></canvas>
                         </div>
                         <div class="loading-overlay" id="loadingCat"><div class="spinner"></div></div>
@@ -405,9 +224,7 @@
                     <h3 data-i18n="chartTypeTitle">地震タイプ別ハザードカーブ（海溝型 vs 直下型）</h3>
                     <div style="position:relative;">
                         <div class="chart-container">
-                            <div class="chart-placeholder" id="placeholderType" data-i18n="chartPlaceholder">
-                                地点を選択するとハザードカーブが表示されます
-                            </div>
+                            <div class="chart-placeholder" id="placeholderType" data-i18n="chartPlaceholder">地点を選択するとハザードカーブが表示されます</div>
                             <canvas id="chartTypes" style="display:none;"></canvas>
                         </div>
                         <div class="loading-overlay" id="loadingType"><div class="spinner"></div></div>
@@ -415,622 +232,479 @@
                 </div>
             </div>
         </div>
+
+        <!-- Fault Search -->
+        <div class="panel fault-panel">
+            <h2 data-i18n="faultTitle">影響断層一覧（被害地震検索）</h2>
+            <div id="faultPlaceholder" class="fault-placeholder" data-i18n="faultPlaceholder">地点を選択すると、当該地点に影響する断層の一覧が表示されます</div>
+            <div class="fault-table-wrap" id="faultTableWrap" style="display:none;">
+                <table class="fault-table">
+                    <thead>
+                        <tr>
+                            <th data-i18n="fthRank">#</th>
+                            <th data-i18n="fthName">断層名</th>
+                            <th data-i18n="fthType">分類</th>
+                            <th data-i18n="fthProb">発生確率</th>
+                            <th data-i18n="fthMag">Mw</th>
+                            <th data-i18n="fthInt">計測震度</th>
+                        </tr>
+                    </thead>
+                    <tbody id="faultTableBody"></tbody>
+                </table>
+            </div>
+        </div>
     </div>
 
 <script>
 // ================================================================
-//  Internationalization (i18n)
+//  i18n
 // ================================================================
 const I18N = {
-    ja: {
-        htmlTitle: '地震ハザードカーブ表示アプリ',
-        title: '地震ハザードカーブ表示アプリ',
-        subtitle: 'J-SHIS（防災科学技術研究所）より50年超過確率（平均ケース）を取得・表示',
-        btnTheme: 'ダークモード',
-        btnThemeLight: 'ライトモード',
-        mapTitle: '対象地点の選択',
-        infoTitle: '地点情報・座標入力',
-        labelLat: '緯度（°N）',
-        labelLng: '経度（°E）',
-        btnFetch: '取得',
-        thLat: '選択緯度',
-        thLng: '選択経度',
-        thMesh: 'メッシュコード',
-        thVersion: 'データバージョン',
-        statusInit: '地図をクリック、または座標を入力して「取得」ボタンを押してください。',
-        statusLoading: 'J-SHIS API からデータを取得中...',
-        statusSuccess: 'データ取得完了（メッシュ: {mesh}）',
-        statusErrorFetch: 'データ取得エラー: {msg}',
-        statusErrorCors: '\n※ CORS制限の可能性があります。ローカルサーバー経由でお試しください。',
-        statusErrorRange: '日本国内の地点を選択してください（緯度20-47°、経度122-154°）',
-        statusErrorInput: '緯度・経度を正しく入力してください。',
-        dlTitle: 'CSV ダウンロード',
-        dlRaw: '取得データ CSV',
-        dlCalc: '算定データ CSV',
-        noteSource: 'データ出典:',
-        noteOrg: '（防災科学技術研究所）',
-        noteSpec: 'バージョン: Y2024 / 平均ケース(AVR) / 50年超過確率(T50)',
-        noteMetric: '地震動指標: 工学的基盤最大速度 PBV [cm/s]',
-        chartMainTitle: 'ハザードカーブ',
-        chartCatTitle: 'カテゴリ別ハザードカーブ',
-        chartTypeTitle: '地震タイプ別ハザードカーブ（海溝型 vs 直下型）',
-        chartPlaceholder: '地点を選択するとハザードカーブが表示されます',
-        xAxisLabel: '工学的基盤最大速度 PBV [cm/s]',
-        yAxisLabel: '超過確率',
-        lblTTL:   '全ての地震',
-        lblCAT1:  'カテゴリーI（海溝型・特定）',
-        lblCAT2:  'カテゴリーII（海溝型・非特定）',
-        lblCAT3:  'カテゴリーIII（直下型）',
-        lblCAT12: '海溝型地震（カテゴリーI+II）',
-        lblCAT3b: '直下型地震（カテゴリーIII）',
-        tooltipPBV: 'PBV',
-        tooltipProb: '超過確率',
-        popupTitle: '選択地点',
-        popupLat: '緯度',
-        popupLng: '経度',
-        csvHeaderRaw: '地震ハザードカーブ 取得データ（APIレスポンス）',
-        csvHeaderCalc: '地震ハザードカーブ 算定データ（海溝型・直下型）',
-        csvLat: '緯度',
-        csvLng: '経度',
-        csvMesh: 'メッシュコード',
-        csvVersion: 'バージョン',
-        csvColPBV: 'PBV[cm/s]',
-        csvColTTL: '全地震(TTL_MTTL)',
-        csvColCAT1: 'カテゴリーI(PLE_MTTL)',
-        csvColCAT2: 'カテゴリーII(PSE_MTTL)',
-        csvColCAT3: 'カテゴリーIII(LND_MTTL)',
-        csvColCAT12: 'カテゴリーI+II(PPE_MTTL)',
-        csvColSub: '海溝型地震(I+II)',
-        csvColCru: '直下型地震(III)',
-        fetching: '取得中...'
-    },
-    en: {
-        htmlTitle: 'Seismic Hazard Curve Viewer',
-        title: 'Seismic Hazard Curve Viewer',
-        subtitle: '50-year exceedance probability (average case) from J-SHIS (NIED)',
-        btnTheme: 'Dark Mode',
-        btnThemeLight: 'Light Mode',
-        mapTitle: 'Select Target Location',
-        infoTitle: 'Location Info / Coordinate Input',
-        labelLat: 'Latitude (°N)',
-        labelLng: 'Longitude (°E)',
-        btnFetch: 'Fetch',
-        thLat: 'Latitude',
-        thLng: 'Longitude',
-        thMesh: 'Mesh Code',
-        thVersion: 'Data Version',
-        statusInit: 'Click the map or enter coordinates and press "Fetch".',
-        statusLoading: 'Fetching data from J-SHIS API...',
-        statusSuccess: 'Data loaded successfully (Mesh: {mesh})',
-        statusErrorFetch: 'Fetch error: {msg}',
-        statusErrorCors: '\n* Possibly blocked by CORS. Try via a local server.',
-        statusErrorRange: 'Please select a location within Japan (Lat 20-47°, Lon 122-154°)',
-        statusErrorInput: 'Please enter valid latitude and longitude.',
-        dlTitle: 'CSV Download',
-        dlRaw: 'Raw Data CSV',
-        dlCalc: 'Calculated Data CSV',
-        noteSource: 'Data source:',
-        noteOrg: ' (NIED)',
-        noteSpec: 'Version: Y2024 / Average(AVR) / 50-year exceedance(T50)',
-        noteMetric: 'Metric: Peak Bedrock Velocity PBV [cm/s]',
-        chartMainTitle: 'Hazard Curves',
-        chartCatTitle: 'Hazard Curves by Category',
-        chartTypeTitle: 'Hazard Curves by Earthquake Type (Subduction vs Crustal)',
-        chartPlaceholder: 'Select a location to display hazard curves',
-        xAxisLabel: 'Peak Bedrock Velocity PBV [cm/s]',
-        yAxisLabel: 'Exceedance Probability',
-        lblTTL:   'All Earthquakes',
-        lblCAT1:  'Category I (Subduction, specified)',
-        lblCAT2:  'Category II (Subduction, unspecified)',
-        lblCAT3:  'Category III (Crustal)',
-        lblCAT12: 'Subduction (Category I+II)',
-        lblCAT3b: 'Crustal (Category III)',
-        tooltipPBV: 'PBV',
-        tooltipProb: 'Exc. Prob.',
-        popupTitle: 'Selected Location',
-        popupLat: 'Lat',
-        popupLng: 'Lon',
-        csvHeaderRaw: 'Seismic Hazard Curve - Raw API Data',
-        csvHeaderCalc: 'Seismic Hazard Curve - Calculated Data (Subduction / Crustal)',
-        csvLat: 'Latitude',
-        csvLng: 'Longitude',
-        csvMesh: 'Mesh Code',
-        csvVersion: 'Version',
-        csvColPBV: 'PBV[cm/s]',
-        csvColTTL: 'All(TTL_MTTL)',
-        csvColCAT1: 'CategoryI(PLE_MTTL)',
-        csvColCAT2: 'CategoryII(PSE_MTTL)',
-        csvColCAT3: 'CategoryIII(LND_MTTL)',
-        csvColCAT12: 'CategoryI+II(PPE_MTTL)',
-        csvColSub: 'Subduction(I+II)',
-        csvColCru: 'Crustal(III)',
-        fetching: 'Fetching...'
-    }
+ja: {
+    htmlTitle:'地震ハザードカーブ表示アプリ',title:'地震ハザードカーブ表示アプリ',
+    subtitle:'J-SHIS（防災科学技術研究所）より50年超過確率（平均ケース）を取得・表示',
+    btnTheme:'ダークモード',btnThemeLight:'ライトモード',
+    mapTitle:'対象地点の選択',infoTitle:'地点情報・座標入力',
+    labelLat:'緯度（°N）',labelLng:'経度（°E）',btnFetch:'取得',
+    thLat:'選択緯度',thLng:'選択経度',thMesh:'メッシュコード',thVersion:'データバージョン',
+    statusInit:'地図をクリック、または座標を入力して「取得」ボタンを押してください。',
+    statusLoading:'J-SHIS API からデータを取得中...',
+    statusSuccess:'データ取得完了（メッシュ: {mesh}）',
+    statusErrorFetch:'データ取得エラー: {msg}',
+    statusErrorCors:'\n※ CORS制限の可能性があります。ローカルサーバー経由でお試しください。',
+    statusErrorRange:'日本国内の地点を選択してください（緯度20-47°、経度122-154°）',
+    statusErrorInput:'緯度・経度を正しく入力してください。',
+    dlTitle:'CSV ダウンロード',dlRaw:'取得データ CSV',dlCalc:'算定データ CSV',dlSite:'サイト情報 CSV',
+    noteSource:'データ出典:',noteOrg:'（防災科学技術研究所）',
+    noteSpec:'バージョン: Y2024 / 平均ケース(AVR) / 50年超過確率(T50)',
+    noteMetric:'地震動指標: 工学的基盤最大速度 PBV [cm/s]',
+    chartMainTitle:'ハザードカーブ',chartCatTitle:'カテゴリ別ハザードカーブ',
+    chartTypeTitle:'地震タイプ別ハザードカーブ（海溝型 vs 直下型）',
+    chartPlaceholder:'地点を選択するとハザードカーブが表示されます',
+    xAxisLabel:'工学的基盤最大速度 PBV [cm/s]',yAxisLabel:'超過確率',
+    lblTTL:'全ての地震',lblCAT1:'カテゴリーI（海溝型・特定）',lblCAT2:'カテゴリーII（海溝型・非特定）',
+    lblCAT3:'カテゴリーIII（直下型）',lblCAT12:'海溝型地震（カテゴリーI+II）',lblCAT3b:'直下型地震（カテゴリーIII）',
+    tooltipPBV:'PBV',tooltipProb:'超過確率',
+    popupTitle:'選択地点',popupLat:'緯度',popupLng:'経度',
+    csvHeaderRaw:'地震ハザードカーブ 取得データ（APIレスポンス）',csvHeaderCalc:'地震ハザードカーブ 算定データ（海溝型・直下型）',
+    csvLat:'緯度',csvLng:'経度',csvMesh:'メッシュコード',csvVersion:'バージョン',
+    csvColPBV:'PBV[cm/s]',csvColTTL:'全地震(TTL_MTTL)',csvColCAT1:'カテゴリーI(PLE_MTTL)',
+    csvColCAT2:'カテゴリーII(PSE_MTTL)',csvColCAT3:'カテゴリーIII(LND_MTTL)',csvColCAT12:'カテゴリーI+II(PPE_MTTL)',
+    csvColSub:'海溝型地震(I+II)',csvColCru:'直下型地震(III)',
+    fetching:'取得中...',
+    // Site
+    siteTitle:'地盤・サイト評価情報',groundTitle:'表層地盤情報',returnTitle:'再現期間別 計測震度',
+    probTitle:'超過確率（50年・全地震）',sitePlaceholder:'地点を選択すると表示されます',
+    thARV:'地盤増幅率 (ARV)',thTopo:'微地形区分',thLandslide:'地すべり地形',
+    landslideYes:'該当あり',landslideNo:'該当なし',
+    rp500:'500 年',rp1000:'1,000 年',rp5000:'5,000 年',rp10k:'10,000 年',rp50k:'50,000 年',rp100k:'100,000 年',
+    pI45:'震度5弱以上',pI50:'震度5強以上',pI55:'震度6弱以上',pI60:'震度6強以上',
+    // Fault
+    faultTitle:'影響断層一覧（被害地震検索）',faultPlaceholder:'地点を選択すると、当該地点に影響する断層の一覧が表示されます',
+    fthRank:'#',fthName:'断層名',fthType:'分類',fthProb:'発生確率',fthMag:'Mw',fthInt:'計測震度',
+    typeSub:'海溝型',typeCru:'直下型',
+    noFault:'当該地点のデータはありません',
+    // CSV site
+    csvHeaderSite:'サイト評価情報',csvVs30:'Vs30[m/s]',csvARV:'地盤増幅率(ARV)',csvTopo:'微地形区分',
+    csvLandslide:'地すべり地形',csvReturnPeriod:'再現期間[年]',csvIntensity:'計測震度',
+    csvFaultName:'断層名',csvFaultType:'分類',csvFaultProb:'発生確率',csvFaultMag:'Mw',csvFaultInt:'計測震度',
+    csvExcProb:'超過確率(50年)',csvExcInt:'震度閾値'
+},
+en: {
+    htmlTitle:'Seismic Hazard Curve Viewer',title:'Seismic Hazard Curve Viewer',
+    subtitle:'50-year exceedance probability (average case) from J-SHIS (NIED)',
+    btnTheme:'Dark Mode',btnThemeLight:'Light Mode',
+    mapTitle:'Select Target Location',infoTitle:'Location Info / Coordinate Input',
+    labelLat:'Latitude (°N)',labelLng:'Longitude (°E)',btnFetch:'Fetch',
+    thLat:'Latitude',thLng:'Longitude',thMesh:'Mesh Code',thVersion:'Data Version',
+    statusInit:'Click the map or enter coordinates and press "Fetch".',
+    statusLoading:'Fetching data from J-SHIS API...',statusSuccess:'Data loaded successfully (Mesh: {mesh})',
+    statusErrorFetch:'Fetch error: {msg}',statusErrorCors:'\n* Possibly blocked by CORS. Try via a local server.',
+    statusErrorRange:'Please select a location within Japan (Lat 20-47, Lon 122-154)',
+    statusErrorInput:'Please enter valid latitude and longitude.',
+    dlTitle:'CSV Download',dlRaw:'Raw Data CSV',dlCalc:'Calculated Data CSV',dlSite:'Site Info CSV',
+    noteSource:'Data source:',noteOrg:' (NIED)',
+    noteSpec:'Version: Y2024 / Average(AVR) / 50-year exceedance(T50)',
+    noteMetric:'Metric: Peak Bedrock Velocity PBV [cm/s]',
+    chartMainTitle:'Hazard Curves',chartCatTitle:'Hazard Curves by Category',
+    chartTypeTitle:'Hazard Curves by Earthquake Type (Subduction vs Crustal)',
+    chartPlaceholder:'Select a location to display hazard curves',
+    xAxisLabel:'Peak Bedrock Velocity PBV [cm/s]',yAxisLabel:'Exceedance Probability',
+    lblTTL:'All Earthquakes',lblCAT1:'Category I (Subduction, specified)',lblCAT2:'Category II (Subduction, unspecified)',
+    lblCAT3:'Category III (Crustal)',lblCAT12:'Subduction (Category I+II)',lblCAT3b:'Crustal (Category III)',
+    tooltipPBV:'PBV',tooltipProb:'Exc. Prob.',
+    popupTitle:'Selected Location',popupLat:'Lat',popupLng:'Lon',
+    csvHeaderRaw:'Seismic Hazard Curve - Raw API Data',csvHeaderCalc:'Seismic Hazard Curve - Calculated Data (Subduction / Crustal)',
+    csvLat:'Latitude',csvLng:'Longitude',csvMesh:'Mesh Code',csvVersion:'Version',
+    csvColPBV:'PBV[cm/s]',csvColTTL:'All(TTL_MTTL)',csvColCAT1:'CategoryI(PLE_MTTL)',
+    csvColCAT2:'CategoryII(PSE_MTTL)',csvColCAT3:'CategoryIII(LND_MTTL)',csvColCAT12:'CategoryI+II(PPE_MTTL)',
+    csvColSub:'Subduction(I+II)',csvColCru:'Crustal(III)',
+    fetching:'Fetching...',
+    siteTitle:'Ground / Site Assessment',groundTitle:'Surface Ground Information',returnTitle:'Return Period Intensity',
+    probTitle:'Exceedance Probability (50yr, All EQ)',sitePlaceholder:'Select a location to display',
+    thARV:'Amplification Factor (ARV)',thTopo:'Microtopography',thLandslide:'Landslide Topography',
+    landslideYes:'Detected',landslideNo:'Not detected',
+    rp500:'500 yr',rp1000:'1,000 yr',rp5000:'5,000 yr',rp10k:'10,000 yr',rp50k:'50,000 yr',rp100k:'100,000 yr',
+    pI45:'JMA 5-lower+',pI50:'JMA 5-upper+',pI55:'JMA 6-lower+',pI60:'JMA 6-upper+',
+    faultTitle:'Affecting Fault List (Damage Earthquake Search)',faultPlaceholder:'Select a location to display the list of faults affecting the site',
+    fthRank:'#',fthName:'Fault Name',fthType:'Type',fthProb:'Probability',fthMag:'Mw',fthInt:'JMA Int.',
+    typeSub:'Subduction',typeCru:'Crustal',
+    noFault:'No data available for this location',
+    csvHeaderSite:'Site Assessment Data',csvVs30:'Vs30[m/s]',csvARV:'Amplification(ARV)',csvTopo:'Microtopography',
+    csvLandslide:'Landslide',csvReturnPeriod:'Return Period[yr]',csvIntensity:'JMA Intensity',
+    csvFaultName:'Fault Name',csvFaultType:'Type',csvFaultProb:'Probability',csvFaultMag:'Mw',csvFaultInt:'JMA Int.',
+    csvExcProb:'Exc. Prob.(50yr)',csvExcInt:'Intensity Threshold'
+}
 };
 
 // ================================================================
-//  Application State
+//  State
 // ================================================================
-let currentLang = 'ja';
-let isDark = false;
-let lastResults = null;
-let lastLat = null;
-let lastLon = null;
-let marker = null;
-let chartCat = null;
-let chartType = null;
-let isFetching = false;
+let currentLang='ja',isDark=false,lastResults=null,lastLat=null,lastLon=null;
+let lastGround=null,lastReturn=null,lastLandslide=null,lastFaults=null,lastMeshInfo=null;
+let marker=null,chartCat=null,chartType=null,isFetching=false;
 
-function t(key) { return I18N[currentLang][key] || key; }
+function t(k){return I18N[currentLang][k]||k}
 
 // ================================================================
-//  i18n: Apply translations
+//  i18n apply
 // ================================================================
-function applyLang() {
-    document.documentElement.lang = currentLang;
-    document.title = t('htmlTitle');
-    document.querySelectorAll('[data-i18n]').forEach(el => {
-        const key = el.getAttribute('data-i18n');
-        // Theme button shows current-mode-aware label
-        if (key === 'btnTheme') {
-            el.textContent = isDark ? t('btnThemeLight') : t('btnTheme');
-            return;
-        }
-        if (I18N[currentLang][key] !== undefined) {
-            el.textContent = I18N[currentLang][key];
-        }
+function applyLang(){
+    document.documentElement.lang=currentLang;
+    document.title=t('htmlTitle');
+    document.querySelectorAll('[data-i18n]').forEach(el=>{
+        const k=el.getAttribute('data-i18n');
+        if(k==='btnTheme'){el.textContent=isDark?t('btnThemeLight'):t('btnTheme');return}
+        if(I18N[currentLang][k]!==undefined) el.textContent=I18N[currentLang][k];
     });
-    document.getElementById('btnLang').textContent = currentLang === 'ja' ? 'EN' : 'JA';
-    // Re-render charts with new labels
-    if (lastResults) renderCharts(lastResults);
+    document.getElementById('btnLang').textContent=currentLang==='ja'?'EN':'JA';
+    if(lastResults) renderCharts(lastResults);
+    if(lastGround) renderGround(lastGround,lastLandslide);
+    if(lastFaults) renderFaults(lastFaults);
 }
+function toggleLang(){currentLang=currentLang==='ja'?'en':'ja';applyLang()}
 
-function toggleLang() {
-    currentLang = currentLang === 'ja' ? 'en' : 'ja';
-    applyLang();
+// ================================================================
+//  Theme
+// ================================================================
+function applyTheme(){
+    document.body.classList.toggle('dark',isDark);
+    document.getElementById('btnTheme').textContent=isDark?t('btnThemeLight'):t('btnTheme');
+    if(lastResults) renderCharts(lastResults);
 }
+function toggleTheme(){isDark=!isDark;applyTheme()}
 
 // ================================================================
-//  Dark / Light Mode
+//  Config
 // ================================================================
-function applyTheme() {
-    document.body.classList.toggle('dark', isDark);
-    const btn = document.getElementById('btnTheme');
-    btn.textContent = isDark ? t('btnThemeLight') : t('btnTheme');
-    // Re-render charts so grid/text colors update
-    if (lastResults) renderCharts(lastResults);
-}
+const API_MAP='https://www.j-shis.bosai.go.jp/map/api';
+const VER='Y2024',CASE='AVR',PER='T50';
+const EQ_CODES={TTL:'TTL_MTTL',CAT1:'PLE_MTTL',CAT2:'PSE_MTTL',CAT3:'LND_MTTL',CAT12:'PPE_MTTL'};
 
-function toggleTheme() {
-    isDark = !isDark;
-    applyTheme();
-}
+function hzcvUrl(eq,lon,lat){return `${API_MAP}/pshm/${VER}/${CASE}/${eq}/${PER}/hzcv.json?position=${lon},${lat}&epsg=4326`}
+function sstrctUrl(lon,lat){return `${API_MAP}/sstrct/V4/meshinfo.geojson?position=${lon},${lat}&epsg=4326`}
+function avghzdUrl(lon,lat){return `${API_MAP}/avghzd/V8/meshinfo.geojson?position=${lon},${lat}&epsg=4326`}
+function landslideUrl(lon,lat){return `${API_MAP}/landslide/isContaining.json?position=${lon},${lat}&epsg=4326`}
+function fltsearchUrl(lon,lat){return `${API_MAP}/fltsearch?position=${lon},${lat}&epsg=4326&mode=C&version=${VER}&case=${CASE}&period=P_T50&format=json`}
+function meshInfoUrl(lon,lat){return `${API_MAP}/pshm/${VER}/${CASE}/TTL_MTTL/meshinfo.geojson?position=${lon},${lat}&epsg=4326`}
 
 // ================================================================
-//  Configuration
+//  Map
 // ================================================================
-const API_BASE = 'https://www.j-shis.bosai.go.jp/map/api/pshm';
-const VERSION  = 'Y2024';
-const AVR      = 'AVR';
-const T50      = 'T50';
-
-const EQ_CODES = {
-    TTL:   'TTL_MTTL',
-    CAT1:  'PLE_MTTL',
-    CAT2:  'PSE_MTTL',
-    CAT3:  'LND_MTTL',
-    CAT12: 'PPE_MTTL'
-};
-
-function apiUrl(eqcode, lon, lat) {
-    return `${API_BASE}/${VERSION}/${AVR}/${eqcode}/${T50}/hzcv.json?position=${lon},${lat}&epsg=4326`;
-}
-
-// ================================================================
-//  Map Initialization
-// ================================================================
-const map = L.map('map', { zoomControl: true }).setView([36.2, 138.0], 5);
-L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
-    maxZoom: 18
+const map=L.map('map',{zoomControl:true}).setView([36.2,138.0],5);
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{
+    attribution:'&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',maxZoom:18
 }).addTo(map);
 
 // ================================================================
-//  Status / Loading Helpers
+//  Helpers
 // ================================================================
-function setStatus(msg, type) {
-    const el = document.getElementById('status');
-    el.textContent = msg;
-    el.className = 'status-' + type;
+function setStatus(msg,type){const el=document.getElementById('status');el.textContent=msg;el.className='status-'+type}
+function showLoading(show){
+    const m=show?'add':'remove';
+    document.getElementById('loadingCat').classList[m]('active');
+    document.getElementById('loadingType').classList[m]('active');
+    document.getElementById('btnFetch').disabled=show;
+    isFetching=show;
 }
-
-function showLoading(show) {
-    const method = show ? 'add' : 'remove';
-    document.getElementById('loadingCat').classList[method]('active');
-    document.getElementById('loadingType').classList[method]('active');
-    document.getElementById('btnFetch').disabled = show;
-    isFetching = show;
-}
-
-// ================================================================
-//  Data Conversion
-// ================================================================
-function toXY(simArr, probArr) {
-    const pts = [];
-    for (let i = 0; i < simArr.length && i < probArr.length; i++) {
-        const x = parseFloat(simArr[i]);
-        const y = parseFloat(probArr[i]);
-        if (y > 0 && !isNaN(x) && !isNaN(y)) {
-            pts.push({ x, y });
-        }
-    }
+function toXY(sim,prob){
+    const pts=[];
+    for(let i=0;i<sim.length&&i<prob.length;i++){const x=parseFloat(sim[i]),y=parseFloat(prob[i]);if(y>0&&!isNaN(x)&&!isNaN(y))pts.push({x,y})}
     return pts;
 }
+function pct(v){const n=parseFloat(v);return isNaN(n)?'-':(n*100).toFixed(1)+'%'}
 
 // ================================================================
-//  API Fetch
+//  Fetch all data
 // ================================================================
-async function fetchHazardCurves(lat, lon) {
-    if (isFetching) return;
+async function fetchAllData(lat,lon){
+    if(isFetching) return;
     showLoading(true);
-    setStatus(t('statusLoading'), 'loading');
-    lastLat = lat;
-    lastLon = lon;
+    setStatus(t('statusLoading'),'loading');
+    lastLat=lat;lastLon=lon;
 
-    document.getElementById('dispLat').textContent = lat.toFixed(4) + '°N';
-    document.getElementById('dispLng').textContent = lon.toFixed(4) + '°E';
-    document.getElementById('dispMesh').textContent = t('fetching');
-    document.getElementById('dispVersion').textContent = VERSION;
+    document.getElementById('dispLat').textContent=lat.toFixed(4)+'°N';
+    document.getElementById('dispLng').textContent=lon.toFixed(4)+'°E';
+    document.getElementById('dispMesh').textContent=t('fetching');
+    document.getElementById('dispVersion').textContent=VER;
+    document.getElementById('inputLat').value=lat.toFixed(4);
+    document.getElementById('inputLng').value=lon.toFixed(4);
 
-    document.getElementById('inputLat').value = lat.toFixed(4);
-    document.getElementById('inputLng').value = lon.toFixed(4);
+    const lonS=lon.toFixed(6),latS=lat.toFixed(6);
+    const results={};
 
-    const results = {};
-
-    try {
-        const entries = Object.entries(EQ_CODES);
-        const fetches = entries.map(([key, code]) =>
-            fetch(apiUrl(code, lon.toFixed(6), lat.toFixed(6)))
-                .then(res => {
-                    if (!res.ok) throw new Error(`HTTP ${res.status} (${code})`);
-                    return res.json();
-                })
-                .then(json => {
-                    if (json.status !== 'Success') {
-                        throw new Error(json.error?.message || `API Error (${code})`);
-                    }
-                    return { key, json };
-                })
+    try{
+        // Hazard curves (critical)
+        const entries=Object.entries(EQ_CODES);
+        const hzcvFetches=entries.map(([k,c])=>
+            fetch(hzcvUrl(c,lonS,latS)).then(r=>{if(!r.ok)throw new Error(`HTTP ${r.status}`);return r.json()}).then(j=>{if(j.status!=='Success')throw new Error(j.error?.message||'Error');return{k,j}})
         );
-
-        const responses = await Promise.all(fetches);
-        for (const { key, json } of responses) {
-            results[key] = {
-                sim:  json.sim.value,
-                prob: json.prob.value,
-                mesh: json.prob.meshcode || json.metaData.meshcode
-            };
-        }
-
-        lastResults = results;
-        document.getElementById('dispMesh').textContent = results.TTL.mesh;
+        const hzcvRes=await Promise.all(hzcvFetches);
+        for(const{k,j}of hzcvRes){results[k]={sim:j.sim.value,prob:j.prob.value,mesh:j.prob.meshcode||j.metaData.meshcode}}
+        lastResults=results;
+        document.getElementById('dispMesh').textContent=results.TTL.mesh;
         document.getElementById('downloadSection').classList.add('visible');
         renderCharts(results);
-        setStatus(t('statusSuccess').replace('{mesh}', results.TTL.mesh), 'success');
 
-    } catch (err) {
-        console.error('Fetch error:', err);
-        let msg = t('statusErrorFetch').replace('{msg}', err.message);
-        if (err.message.includes('Failed to fetch') || err.message.includes('NetworkError')) {
-            msg += t('statusErrorCors');
-        }
-        setStatus(msg, 'error');
-        document.getElementById('dispMesh').textContent = '-';
-    } finally {
-        showLoading(false);
+        // Supplementary (non-blocking)
+        const [groundRes,avghzdRes,landslideRes,faultRes,meshInfoRes]=await Promise.allSettled([
+            fetch(sstrctUrl(lonS,latS)).then(r=>r.json()),
+            fetch(avghzdUrl(lonS,latS)).then(r=>r.json()),
+            fetch(landslideUrl(lonS,latS)).then(r=>r.json()),
+            fetch(fltsearchUrl(lonS,latS)).then(r=>r.json()),
+            fetch(meshInfoUrl(lonS,latS)).then(r=>r.json())
+        ]);
+
+        // Ground
+        if(groundRes.status==='fulfilled'){
+            const p=groundRes.value?.features?.[0]?.properties||groundRes.value?.properties||{};
+            lastGround=p;
+        }else{lastGround=null}
+
+        // Landslide
+        if(landslideRes.status==='fulfilled'){
+            lastLandslide=landslideRes.value;
+        }else{lastLandslide=null}
+        renderGround(lastGround,lastLandslide);
+
+        // Return period
+        if(avghzdRes.status==='fulfilled'){
+            const p=avghzdRes.value?.features?.[0]?.properties||avghzdRes.value?.properties||{};
+            lastReturn=p;
+            renderReturn(p);
+        }else{lastReturn=null;renderReturn(null)}
+
+        // Mesh info (exceedance probability)
+        if(meshInfoRes.status==='fulfilled'){
+            const p=meshInfoRes.value?.features?.[0]?.properties||meshInfoRes.value?.properties||{};
+            lastMeshInfo=p;
+            renderMeshInfo(p);
+        }else{lastMeshInfo=null;renderMeshInfo(null)}
+
+        // Faults
+        if(faultRes.status==='fulfilled'){
+            const d=faultRes.value;
+            lastFaults=Array.isArray(d)?d:(d?.data||d?.features||d?.result||[]);
+            renderFaults(lastFaults);
+        }else{lastFaults=[];renderFaults([])}
+
+        setStatus(t('statusSuccess').replace('{mesh}',results.TTL.mesh),'success');
+    }catch(err){
+        console.error(err);
+        let msg=t('statusErrorFetch').replace('{msg}',err.message);
+        if(err.message.includes('Failed to fetch')||err.message.includes('NetworkError'))msg+=t('statusErrorCors');
+        setStatus(msg,'error');
+        document.getElementById('dispMesh').textContent='-';
+    }finally{showLoading(false)}
+}
+
+// ================================================================
+//  Render: Ground Info
+// ================================================================
+function renderGround(g,ls){
+    if(!g){document.getElementById('groundTable').style.display='none';document.getElementById('groundPlaceholder').style.display='';return}
+    document.getElementById('groundPlaceholder').style.display='none';
+    document.getElementById('groundTable').style.display='';
+    document.getElementById('dispVs30').textContent=g.AVS?parseFloat(g.AVS).toFixed(1)+' m/s':'-';
+    document.getElementById('dispARV').textContent=g.ARV?parseFloat(g.ARV).toFixed(2):'-';
+    document.getElementById('dispTopo').textContent=g.JNAME||g.JCODE||'-';
+    const lsEl=document.getElementById('dispLandslide');
+    if(ls&&ls.isContaining!==undefined){
+        const hit=ls.isContaining===1||ls.isContaining==='1';
+        lsEl.textContent=hit?t('landslideYes'):t('landslideNo');
+        lsEl.className=hit?'landslide-yes':'landslide-no';
+    }else{lsEl.textContent='-';lsEl.className=''}
+}
+
+// ================================================================
+//  Render: Return Period
+// ================================================================
+function renderReturn(p){
+    if(!p){document.getElementById('returnTable').style.display='none';document.getElementById('returnPlaceholder').style.display='';return}
+    document.getElementById('returnPlaceholder').style.display='none';
+    document.getElementById('returnTable').style.display='';
+    const map={A0500_SI:'dispA500',A1000_SI:'dispA1000',A5000_SI:'dispA5000',A010K_SI:'dispA10K',A050K_SI:'dispA50K',A100K_SI:'dispA100K'};
+    for(const[k,id]of Object.entries(map)){
+        const v=p[k];document.getElementById(id).textContent=v?parseFloat(v).toFixed(1):'-';
     }
 }
 
 // ================================================================
-//  Chart Rendering
+//  Render: Mesh Info (exceedance probability)
 // ================================================================
-const CHART_COLORS = {
-    TTL:   { border: '#2d3748', borderDark: '#e2e8f0' },
-    CAT1:  { border: '#63b3ed', borderDark: '#63b3ed' },
-    CAT2:  { border: '#48bb78', borderDark: '#68d391' },
-    CAT3:  { border: '#ecc94b', borderDark: '#fbd38d' },
-    CAT12: { border: '#ed8936', borderDark: '#f6ad55' }
-};
-
-function clr(key) {
-    return isDark ? CHART_COLORS[key].borderDark : CHART_COLORS[key].border;
-}
-
-function makeChartConfig(datasets, xMax) {
-    const gridColor = isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.06)';
-    const tickColor = isDark ? '#94a3b8' : '#666666';
-    const titleColor = isDark ? '#cbd5e0' : '#333333';
-
-    return {
-        type: 'scatter',
-        data: { datasets },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            interaction: { mode: 'nearest', axis: 'x', intersect: false },
-            plugins: {
-                legend: {
-                    position: 'top',
-                    labels: {
-                        usePointStyle: true,
-                        pointStyle: 'line',
-                        padding: 14,
-                        font: { size: 12 },
-                        color: tickColor
-                    }
-                },
-                tooltip: {
-                    callbacks: {
-                        label: function(ctx) {
-                            const p = ctx.parsed.y;
-                            const pStr = p >= 0.001 ? p.toFixed(4) : p.toExponential(2);
-                            return `${ctx.dataset.label}: ${t('tooltipPBV')}=${ctx.parsed.x} cm/s, ${t('tooltipProb')}=${pStr}`;
-                        }
-                    }
-                }
-            },
-            scales: {
-                x: {
-                    type: 'linear',
-                    min: 0,
-                    max: xMax,
-                    title: {
-                        display: true,
-                        text: t('xAxisLabel'),
-                        font: { size: 13, weight: 'bold' },
-                        color: titleColor
-                    },
-                    grid: { color: gridColor },
-                    ticks: { stepSize: xMax <= 100 ? 10 : 25, color: tickColor }
-                },
-                y: {
-                    type: 'logarithmic',
-                    min: 0.001,
-                    max: 1,
-                    title: {
-                        display: true,
-                        text: t('yAxisLabel'),
-                        font: { size: 13, weight: 'bold' },
-                        color: titleColor
-                    },
-                    grid: { color: gridColor },
-                    ticks: {
-                        color: tickColor,
-                        callback: function(value) {
-                            const log = Math.log10(value);
-                            if (Math.abs(log - Math.round(log)) < 0.01) {
-                                if (value >= 0.01) return value.toString();
-                                return value.toExponential(0);
-                            }
-                            return '';
-                        },
-                        autoSkip: false,
-                        maxTicksLimit: 10
-                    }
-                }
-            }
-        }
-    };
-}
-
-function ds(label, data, colorKey, width) {
-    return {
-        label,
-        data,
-        borderColor: clr(colorKey),
-        borderWidth: width || 2,
-        showLine: true,
-        pointRadius: 0,
-        pointHoverRadius: 4,
-        tension: 0.3
-    };
-}
-
-function renderCharts(R) {
-    document.getElementById('placeholderCat').style.display = 'none';
-    document.getElementById('placeholderType').style.display = 'none';
-    document.getElementById('chartCategories').style.display = 'block';
-    document.getElementById('chartTypes').style.display = 'block';
-
-    if (chartCat)  { chartCat.destroy();  chartCat = null; }
-    if (chartType) { chartType.destroy(); chartType = null; }
-
-    // Chart 1: Category breakdown
-    const dsCat = [
-        ds(t('lblTTL'),  toXY(R.TTL.sim,  R.TTL.prob),  'TTL',  2.5),
-        ds(t('lblCAT1'), toXY(R.CAT1.sim, R.CAT1.prob), 'CAT1', 2),
-        ds(t('lblCAT2'), toXY(R.CAT2.sim, R.CAT2.prob), 'CAT2', 2),
-        ds(t('lblCAT3'), toXY(R.CAT3.sim, R.CAT3.prob), 'CAT3', 2)
-    ];
-    chartCat = new Chart(
-        document.getElementById('chartCategories').getContext('2d'),
-        makeChartConfig(dsCat, 150)
-    );
-
-    // Chart 2: Subduction vs Crustal
-    const dsType = [
-        ds(t('lblCAT12'), toXY(R.CAT12.sim, R.CAT12.prob), 'CAT12', 2.5),
-        ds(t('lblCAT3b'), toXY(R.CAT3.sim,  R.CAT3.prob),  'TTL',   2.5)
-    ];
-    chartType = new Chart(
-        document.getElementById('chartTypes').getContext('2d'),
-        makeChartConfig(dsType, 100)
-    );
+function renderMeshInfo(p){
+    if(!p){document.getElementById('probTable').style.display='none';document.getElementById('probPlaceholder').style.display='';return}
+    document.getElementById('probPlaceholder').style.display='none';
+    document.getElementById('probTable').style.display='';
+    const map={T50_I45_PS:'dispI45',T50_I50_PS:'dispI50',T50_I55_PS:'dispI55',T50_I60_PS:'dispI60'};
+    for(const[k,id]of Object.entries(map)){
+        const v=p[k];document.getElementById(id).textContent=v?pct(v):'-';
+    }
 }
 
 // ================================================================
-//  CSV Download
+//  Render: Faults
 // ================================================================
-function buildBOM() { return '\uFEFF'; } // UTF-8 BOM for Excel
-
-function csvMeta() {
-    const lines = [];
-    lines.push(`${t('csvLat')},${lastLat.toFixed(4)}N`);
-    lines.push(`${t('csvLng')},${lastLon.toFixed(4)}E`);
-    lines.push(`${t('csvMesh')},${lastResults.TTL.mesh}`);
-    lines.push(`${t('csvVersion')},${VERSION} / AVR / T50`);
-    return lines;
+function renderFaults(faults){
+    const wrap=document.getElementById('faultTableWrap');
+    const ph=document.getElementById('faultPlaceholder');
+    const tbody=document.getElementById('faultTableBody');
+    tbody.innerHTML='';
+    if(!faults||faults.length===0){
+        wrap.style.display='none';ph.style.display='';ph.textContent=lastLat?t('noFault'):t('faultPlaceholder');return;
+    }
+    ph.style.display='none';wrap.style.display='';
+    faults.forEach((f,i)=>{
+        const tr=document.createElement('tr');
+        const isSub=(f.eqcategory==='4'||f.eqcategory===4||f.eqgroup==='C');
+        const typeLabel=isSub?t('typeSub'):t('typeCru');
+        const badgeClass=isSub?'badge-sub':'badge-cru';
+        const mag=f.magnitude?String(f.magnitude).split(',').map(v=>Math.abs(parseFloat(v)).toFixed(1)).join(' - '):'-';
+        const prob=f.probability?parseFloat(f.probability):null;
+        const probStr=prob!==null?(prob<0.01?prob.toExponential(2):(prob*100).toFixed(1)+'%'):'-';
+        const ijma=f.ijma?parseFloat(f.ijma).toFixed(1):'-';
+        tr.innerHTML=`<td>${i+1}</td><td>${f.ltename||f.name||'-'}</td><td><span class="badge ${badgeClass}">${typeLabel}</span></td><td>${probStr}</td><td>${mag}</td><td>${ijma}</td>`;
+        tbody.appendChild(tr);
+    });
 }
 
-function triggerDownload(filename, csvText) {
-    const blob = new Blob([buildBOM() + csvText], { type: 'text/csv;charset=utf-8;' });
-    const a = document.createElement('a');
-    a.href = URL.createObjectURL(blob);
-    a.download = filename;
-    a.click();
-    URL.revokeObjectURL(a.href);
+// ================================================================
+//  Charts
+// ================================================================
+const CC={TTL:{b:'#2d3748',d:'#e2e8f0'},CAT1:{b:'#63b3ed',d:'#63b3ed'},CAT2:{b:'#48bb78',d:'#68d391'},CAT3:{b:'#ecc94b',d:'#fbd38d'},CAT12:{b:'#ed8936',d:'#f6ad55'}};
+function clr(k){return isDark?CC[k].d:CC[k].b}
+function makeChartCfg(datasets,xMax){
+    const gc=isDark?'rgba(255,255,255,.08)':'rgba(0,0,0,.06)',tc=isDark?'#94a3b8':'#666',ttc=isDark?'#cbd5e0':'#333';
+    return{type:'scatter',data:{datasets},options:{responsive:true,maintainAspectRatio:false,interaction:{mode:'nearest',axis:'x',intersect:false},
+        plugins:{legend:{position:'top',labels:{usePointStyle:true,pointStyle:'line',padding:14,font:{size:12},color:tc}},
+            tooltip:{callbacks:{label:function(c){const p=c.parsed.y,ps=p>=.001?p.toFixed(4):p.toExponential(2);return`${c.dataset.label}: ${t('tooltipPBV')}=${c.parsed.x} cm/s, ${t('tooltipProb')}=${ps}`}}}},
+        scales:{x:{type:'linear',min:0,max:xMax,title:{display:true,text:t('xAxisLabel'),font:{size:13,weight:'bold'},color:ttc},grid:{color:gc},ticks:{stepSize:xMax<=100?10:25,color:tc}},
+            y:{type:'logarithmic',min:.001,max:1,title:{display:true,text:t('yAxisLabel'),font:{size:13,weight:'bold'},color:ttc},grid:{color:gc},
+                ticks:{color:tc,callback:function(v){const l=Math.log10(v);if(Math.abs(l-Math.round(l))<.01)return v>=.01?v.toString():v.toExponential(0);return''},autoSkip:false,maxTicksLimit:10}}}}};
+}
+function ds(label,data,ck,w){return{label,data,borderColor:clr(ck),borderWidth:w||2,showLine:true,pointRadius:0,pointHoverRadius:4,tension:.3}}
+function renderCharts(R){
+    document.getElementById('placeholderCat').style.display='none';document.getElementById('placeholderType').style.display='none';
+    document.getElementById('chartCategories').style.display='block';document.getElementById('chartTypes').style.display='block';
+    if(chartCat){chartCat.destroy();chartCat=null}if(chartType){chartType.destroy();chartType=null}
+    chartCat=new Chart(document.getElementById('chartCategories').getContext('2d'),makeChartCfg([
+        ds(t('lblTTL'),toXY(R.TTL.sim,R.TTL.prob),'TTL',2.5),ds(t('lblCAT1'),toXY(R.CAT1.sim,R.CAT1.prob),'CAT1',2),
+        ds(t('lblCAT2'),toXY(R.CAT2.sim,R.CAT2.prob),'CAT2',2),ds(t('lblCAT3'),toXY(R.CAT3.sim,R.CAT3.prob),'CAT3',2)],150));
+    chartType=new Chart(document.getElementById('chartTypes').getContext('2d'),makeChartCfg([
+        ds(t('lblCAT12'),toXY(R.CAT12.sim,R.CAT12.prob),'CAT12',2.5),ds(t('lblCAT3b'),toXY(R.CAT3.sim,R.CAT3.prob),'TTL',2.5)],100));
 }
 
-function downloadRawCSV() {
-    if (!lastResults) return;
-    const R = lastResults;
-    const lines = [];
-    lines.push(t('csvHeaderRaw'));
-    lines.push(...csvMeta());
+// ================================================================
+//  CSV
+// ================================================================
+function bom(){return'\uFEFF'}
+function csvMeta(){return[`${t('csvLat')},${lastLat.toFixed(4)}N`,`${t('csvLng')},${lastLon.toFixed(4)}E`,`${t('csvMesh')},${lastResults.TTL.mesh}`,`${t('csvVersion')},${VER} / AVR / T50`]}
+function dl(fn,csv){const b=new Blob([bom()+csv],{type:'text/csv;charset=utf-8;'});const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download=fn;a.click();URL.revokeObjectURL(a.href)}
+
+function downloadRawCSV(){
+    if(!lastResults)return;const R=lastResults,lines=[t('csvHeaderRaw'),...csvMeta(),''];
+    const pbv=R.TTL.sim.map(v=>parseFloat(v));
+    lines.push([t('csvColPBV'),t('csvColTTL'),t('csvColCAT1'),t('csvColCAT2'),t('csvColCAT3'),t('csvColCAT12')].join(','));
+    const pm={};for(const k of['TTL','CAT1','CAT2','CAT3','CAT12']){pm[k]={};for(let i=0;i<R[k].sim.length;i++)pm[k][R[k].sim[i]]=R[k].prob[i]}
+    for(const v of pbv){const row=[v];for(const k of['TTL','CAT1','CAT2','CAT3','CAT12'])row.push(pm[k][String(v)]||'');lines.push(row.join(','))}
+    dl(`hazard_raw_${R.TTL.mesh}.csv`,lines.join('\n'));
+}
+function downloadCalcCSV(){
+    if(!lastResults)return;const R=lastResults,lines=[t('csvHeaderCalc'),...csvMeta(),''];
+    lines.push([t('csvColPBV'),t('csvColSub'),t('csvColCru')].join(','));
+    const pbv=R.TTL.sim.map(v=>parseFloat(v));
+    const sm={},cm={};for(let i=0;i<R.CAT12.sim.length;i++)sm[R.CAT12.sim[i]]=R.CAT12.prob[i];
+    for(let i=0;i<R.CAT3.sim.length;i++)cm[R.CAT3.sim[i]]=R.CAT3.prob[i];
+    for(const v of pbv)lines.push([v,sm[String(v)]||'',cm[String(v)]||''].join(','));
+    dl(`hazard_calc_${R.TTL.mesh}.csv`,lines.join('\n'));
+}
+function downloadSiteCSV(){
+    if(!lastResults)return;const mesh=lastResults.TTL.mesh;
+    const lines=[t('csvHeaderSite'),...csvMeta(),''];
+    // Ground
+    lines.push(`[${t('groundTitle')}]`);
+    if(lastGround){
+        lines.push(`${t('csvVs30')},${lastGround.AVS||''}`);
+        lines.push(`${t('csvARV')},${lastGround.ARV||''}`);
+        lines.push(`${t('csvTopo')},${lastGround.JNAME||lastGround.JCODE||''}`);
+    }
+    if(lastLandslide){lines.push(`${t('csvLandslide')},${lastLandslide.isContaining===1||lastLandslide.isContaining==='1'?t('landslideYes'):t('landslideNo')}`)}
     lines.push('');
-
-    // Build unified PBV column from TTL (longest)
-    const pbvAll = R.TTL.sim.map(v => parseFloat(v));
-
-    // Header row
-    lines.push([
-        t('csvColPBV'),
-        t('csvColTTL'),
-        t('csvColCAT1'),
-        t('csvColCAT2'),
-        t('csvColCAT3'),
-        t('csvColCAT12')
-    ].join(','));
-
-    // Data rows - align by PBV value
-    const probMap = {};
-    for (const key of ['TTL', 'CAT1', 'CAT2', 'CAT3', 'CAT12']) {
-        probMap[key] = {};
-        for (let i = 0; i < R[key].sim.length; i++) {
-            probMap[key][R[key].sim[i]] = R[key].prob[i];
-        }
+    // Exceedance prob
+    if(lastMeshInfo){
+        lines.push(`[${t('probTitle')}]`);
+        lines.push(`${t('csvExcInt')},${t('csvExcProb')}`);
+        const mp={T50_I45_PS:t('pI45'),T50_I50_PS:t('pI50'),T50_I55_PS:t('pI55'),T50_I60_PS:t('pI60')};
+        for(const[k,label]of Object.entries(mp))lines.push(`${label},${lastMeshInfo[k]||''}`);
+        lines.push('');
     }
-
-    for (const pbv of pbvAll) {
-        const row = [pbv];
-        for (const key of ['TTL', 'CAT1', 'CAT2', 'CAT3', 'CAT12']) {
-            row.push(probMap[key][String(pbv)] || '');
-        }
-        lines.push(row.join(','));
+    // Return period
+    if(lastReturn){
+        lines.push(`[${t('returnTitle')}]`);
+        lines.push(`${t('csvReturnPeriod')},${t('csvIntensity')}`);
+        const rp={A0500_SI:'500',A1000_SI:'1000',A5000_SI:'5000',A010K_SI:'10000',A050K_SI:'50000',A100K_SI:'100000'};
+        for(const[k,yr]of Object.entries(rp))lines.push(`${yr},${lastReturn[k]||''}`);
+        lines.push('');
     }
-
-    const mesh = R.TTL.mesh;
-    triggerDownload(`hazard_raw_${mesh}.csv`, lines.join('\n'));
-}
-
-function downloadCalcCSV() {
-    if (!lastResults) return;
-    const R = lastResults;
-    const lines = [];
-    lines.push(t('csvHeaderCalc'));
-    lines.push(...csvMeta());
-    lines.push('');
-
-    lines.push([t('csvColPBV'), t('csvColSub'), t('csvColCru')].join(','));
-
-    // Use TTL PBV as reference
-    const pbvAll = R.TTL.sim.map(v => parseFloat(v));
-    const subMap = {};
-    for (let i = 0; i < R.CAT12.sim.length; i++) {
-        subMap[R.CAT12.sim[i]] = R.CAT12.prob[i];
+    // Faults
+    if(lastFaults&&lastFaults.length>0){
+        lines.push(`[${t('faultTitle')}]`);
+        lines.push([t('fthRank'),t('csvFaultName'),t('csvFaultType'),t('csvFaultProb'),t('csvFaultMag'),t('csvFaultInt')].join(','));
+        lastFaults.forEach((f,i)=>{
+            const isSub=(f.eqcategory==='4'||f.eqcategory===4||f.eqgroup==='C');
+            const mag=f.magnitude?String(f.magnitude).split(',').map(v=>Math.abs(parseFloat(v)).toFixed(1)).join('-'):'-';
+            lines.push([i+1,`"${(f.ltename||f.name||'').replace(/"/g,'""')}"`,isSub?t('typeSub'):t('typeCru'),f.probability||'',mag,f.ijma||''].join(','));
+        });
     }
-    const cruMap = {};
-    for (let i = 0; i < R.CAT3.sim.length; i++) {
-        cruMap[R.CAT3.sim[i]] = R.CAT3.prob[i];
-    }
-
-    for (const pbv of pbvAll) {
-        const row = [
-            pbv,
-            subMap[String(pbv)] || '',
-            cruMap[String(pbv)] || ''
-        ];
-        lines.push(row.join(','));
-    }
-
-    const mesh = R.TTL.mesh;
-    triggerDownload(`hazard_calc_${mesh}.csv`, lines.join('\n'));
+    dl(`site_info_${mesh}.csv`,lines.join('\n'));
 }
 
 // ================================================================
-//  Map Event Handlers
+//  Map events
 // ================================================================
-map.on('click', function(e) {
-    const lat = e.latlng.lat;
-    const lng = e.latlng.lng;
-
-    if (lat < 20 || lat > 47 || lng < 122 || lng > 154) {
-        setStatus(t('statusErrorRange'), 'error');
-        return;
-    }
-
-    if (marker) {
-        marker.setLatLng([lat, lng]);
-    } else {
-        marker = L.marker([lat, lng]).addTo(map);
-    }
-    marker.bindPopup(
-        `<b>${t('popupTitle')}</b><br>${t('popupLat')}: ${lat.toFixed(4)}°N<br>${t('popupLng')}: ${lng.toFixed(4)}°E`
-    ).openPopup();
-
-    fetchHazardCurves(lat, lng);
+map.on('click',function(e){
+    const{lat,lng}=e.latlng;
+    if(lat<20||lat>47||lng<122||lng>154){setStatus(t('statusErrorRange'),'error');return}
+    if(marker)marker.setLatLng([lat,lng]);else marker=L.marker([lat,lng]).addTo(map);
+    marker.bindPopup(`<b>${t('popupTitle')}</b><br>${t('popupLat')}: ${lat.toFixed(4)}°N<br>${t('popupLng')}: ${lng.toFixed(4)}°E`).openPopup();
+    fetchAllData(lat,lng);
 });
-
-function fetchFromInput() {
-    const lat = parseFloat(document.getElementById('inputLat').value);
-    const lng = parseFloat(document.getElementById('inputLng').value);
-
-    if (isNaN(lat) || isNaN(lng)) {
-        setStatus(t('statusErrorInput'), 'error');
-        return;
-    }
-    if (lat < 20 || lat > 47 || lng < 122 || lng > 154) {
-        setStatus(t('statusErrorRange'), 'error');
-        return;
-    }
-
-    map.setView([lat, lng], Math.max(map.getZoom(), 8));
-    if (marker) {
-        marker.setLatLng([lat, lng]);
-    } else {
-        marker = L.marker([lat, lng]).addTo(map);
-    }
-    marker.bindPopup(
-        `<b>${t('popupTitle')}</b><br>${t('popupLat')}: ${lat.toFixed(4)}°N<br>${t('popupLng')}: ${lng.toFixed(4)}°E`
-    ).openPopup();
-
-    fetchHazardCurves(lat, lng);
+function fetchFromInput(){
+    const lat=parseFloat(document.getElementById('inputLat').value),lng=parseFloat(document.getElementById('inputLng').value);
+    if(isNaN(lat)||isNaN(lng)){setStatus(t('statusErrorInput'),'error');return}
+    if(lat<20||lat>47||lng<122||lng>154){setStatus(t('statusErrorRange'),'error');return}
+    map.setView([lat,lng],Math.max(map.getZoom(),8));
+    if(marker)marker.setLatLng([lat,lng]);else marker=L.marker([lat,lng]).addTo(map);
+    marker.bindPopup(`<b>${t('popupTitle')}</b><br>${t('popupLat')}: ${lat.toFixed(4)}°N<br>${t('popupLng')}: ${lng.toFixed(4)}°E`).openPopup();
+    fetchAllData(lat,lng);
 }
-
-document.getElementById('inputLat').addEventListener('keydown', function(e) {
-    if (e.key === 'Enter') fetchFromInput();
-});
-document.getElementById('inputLng').addEventListener('keydown', function(e) {
-    if (e.key === 'Enter') fetchFromInput();
-});
+document.getElementById('inputLat').addEventListener('keydown',e=>{if(e.key==='Enter')fetchFromInput()});
+document.getElementById('inputLng').addEventListener('keydown',e=>{if(e.key==='Enter')fetchFromInput()});
 
 // ================================================================
-//  Init: respect OS preference for dark mode
+//  Init
 // ================================================================
-if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
-    isDark = true;
-    applyTheme();
-}
+if(window.matchMedia&&window.matchMedia('(prefers-color-scheme:dark)').matches){isDark=true;applyTheme()}
 </script>
 </body>
 </html>
