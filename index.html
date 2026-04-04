@@ -179,17 +179,15 @@
                         <tr><th data-i18n="thLandslide">地すべり地形</th><td id="dispLandslide">-</td></tr>
                     </table>
                 </div>
-                <!-- Return Period -->
+                <!-- Exceedance Level Intensity -->
                 <div>
-                    <h3 data-i18n="returnTitle">再現期間別 計測震度</h3>
+                    <h3 data-i18n="returnTitle">超過確率別 計測震度（50年）</h3>
                     <div id="returnPlaceholder" class="site-placeholder" data-i18n="sitePlaceholder">地点を選択すると表示されます</div>
                     <table class="info-table" id="returnTable" style="display:none;">
-                        <tr><th data-i18n="rp500">500 年</th><td id="dispA500" class="intensity-val">-</td></tr>
-                        <tr><th data-i18n="rp1000">1,000 年</th><td id="dispA1000" class="intensity-val">-</td></tr>
-                        <tr><th data-i18n="rp5000">5,000 年</th><td id="dispA5000" class="intensity-val">-</td></tr>
-                        <tr><th data-i18n="rp10k">10,000 年</th><td id="dispA10K" class="intensity-val">-</td></tr>
-                        <tr><th data-i18n="rp50k">50,000 年</th><td id="dispA50K" class="intensity-val">-</td></tr>
-                        <tr><th data-i18n="rp100k">100,000 年</th><td id="dispA100K" class="intensity-val">-</td></tr>
+                        <tr><th data-i18n="rpP39">39%（≒100年再現）</th><td id="dispP39" class="intensity-val">-</td></tr>
+                        <tr><th data-i18n="rpP10">10%（≒475年再現）</th><td id="dispP10" class="intensity-val">-</td></tr>
+                        <tr><th data-i18n="rpP05">5%（≒975年再現）</th><td id="dispP05" class="intensity-val">-</td></tr>
+                        <tr><th data-i18n="rpP02">2%（≒2,475年再現）</th><td id="dispP02" class="intensity-val">-</td></tr>
                     </table>
                 </div>
                 <!-- Hazard Summary -->
@@ -293,11 +291,11 @@ ja: {
     csvColSub:'海溝型地震(I+II)',csvColCru:'直下型地震(III)',
     fetching:'取得中...',
     // Site
-    siteTitle:'地盤・サイト評価情報',groundTitle:'表層地盤情報',returnTitle:'再現期間別 計測震度',
+    siteTitle:'地盤・サイト評価情報',groundTitle:'表層地盤情報',returnTitle:'超過確率別 計測震度（50年）',
     probTitle:'超過確率（30年・全地震）',sitePlaceholder:'地点を選択すると表示されます',
     thARV:'地盤増幅率 (ARV)',thTopo:'微地形区分',thLandslide:'地すべり地形',
     landslideYes:'該当あり',landslideNo:'該当なし',
-    rp500:'500 年',rp1000:'1,000 年',rp5000:'5,000 年',rp10k:'10,000 年',rp50k:'50,000 年',rp100k:'100,000 年',
+    rpP39:'39%（≒100年再現）',rpP10:'10%（≒475年再現）',rpP05:'5%（≒975年再現）',rpP02:'2%（≒2,475年再現）',
     pI45:'震度5弱以上',pI50:'震度5強以上',pI55:'震度6弱以上',pI60:'震度6強以上',
     // Fault
     faultTitle:'影響断層一覧（被害地震検索）',faultPlaceholder:'地点を選択すると、当該地点に影響する断層の一覧が表示されます',
@@ -306,7 +304,7 @@ ja: {
     noFault:'当該地点のデータはありません',
     // CSV site
     csvHeaderSite:'サイト評価情報',csvVs30:'Vs30[m/s]',csvARV:'地盤増幅率(ARV)',csvTopo:'微地形区分',
-    csvLandslide:'地すべり地形',csvReturnPeriod:'再現期間[年]',csvIntensity:'計測震度',
+    csvLandslide:'地すべり地形',csvReturnPeriod:'超過確率(50年)',csvIntensity:'計測震度',
     csvFaultName:'断層名',csvFaultType:'分類',csvFaultProb:'発生確率',csvFaultMag:'Mw',csvFaultInt:'計測震度',
     csvExcProb:'超過確率(50年)',csvExcInt:'震度閾値'
 },
@@ -340,18 +338,18 @@ en: {
     csvColCAT2:'CategoryII(PSE_MTTL)',csvColCAT3:'CategoryIII(LND_MTTL)',csvColCAT12:'CategoryI+II(PPE_MTTL)',
     csvColSub:'Subduction(I+II)',csvColCru:'Crustal(III)',
     fetching:'Fetching...',
-    siteTitle:'Ground / Site Assessment',groundTitle:'Surface Ground Information',returnTitle:'Return Period Intensity',
+    siteTitle:'Ground / Site Assessment',groundTitle:'Surface Ground Information',returnTitle:'Intensity by Exceedance Prob. (50yr)',
     probTitle:'Exceedance Probability (30yr, All EQ)',sitePlaceholder:'Select a location to display',
     thARV:'Amplification Factor (ARV)',thTopo:'Microtopography',thLandslide:'Landslide Topography',
     landslideYes:'Detected',landslideNo:'Not detected',
-    rp500:'500 yr',rp1000:'1,000 yr',rp5000:'5,000 yr',rp10k:'10,000 yr',rp50k:'50,000 yr',rp100k:'100,000 yr',
+    rpP39:'39% (≒100yr return)',rpP10:'10% (≒475yr return)',rpP05:'5% (≒975yr return)',rpP02:'2% (≒2,475yr return)',
     pI45:'JMA 5-lower+',pI50:'JMA 5-upper+',pI55:'JMA 6-lower+',pI60:'JMA 6-upper+',
     faultTitle:'Affecting Fault List (Damage Earthquake Search)',faultPlaceholder:'Select a location to display the list of faults affecting the site',
     fthRank:'#',fthName:'Fault Name',fthType:'Type',fthProb:'Probability',fthMag:'Mw',fthInt:'JMA Int.',
     typeSub:'Subduction',typeCru:'Crustal',
     noFault:'No data available for this location',
     csvHeaderSite:'Site Assessment Data',csvVs30:'Vs30[m/s]',csvARV:'Amplification(ARV)',csvTopo:'Microtopography',
-    csvLandslide:'Landslide',csvReturnPeriod:'Return Period[yr]',csvIntensity:'JMA Intensity',
+    csvLandslide:'Landslide',csvReturnPeriod:'Exc.Prob.(50yr)',csvIntensity:'JMA Intensity',
     csvFaultName:'Fault Name',csvFaultType:'Type',csvFaultProb:'Probability',csvFaultMag:'Mw',csvFaultInt:'JMA Int.',
     csvExcProb:'Exc. Prob.(50yr)',csvExcInt:'Intensity Threshold'
 }
@@ -404,7 +402,6 @@ const EQ_CODES={TTL:'TTL_MTTL',CAT1:'PLE_MTTL',CAT2:'PSE_MTTL',CAT3:'LND_MTTL',C
 
 function hzcvUrl(eq,lon,lat){return `${API_MAP}/pshm/${VER}/${CASE}/${eq}/${PER}/hzcv.json?position=${lon},${lat}&epsg=4326`}
 function sstrctUrl(lon,lat){return `${API_MAP}/sstrct/V4/meshinfo.geojson?position=${lon},${lat}&epsg=4326`}
-function avghzdUrl(lon,lat){return `${API_MAP}/avghzd/V8/meshinfo.geojson?position=${lon},${lat}&epsg=4326`}
 function landslideUrl(lon,lat){return `${API_MAP}/landslide/isContaining.json?position=${lon},${lat}&epsg=4326`}
 function fltsearchUrl(lon,lat){return `${API_MAP}/fltsearch?position=${lon},${lat}&epsg=4326&mode=C&version=${VER}&case=${CASE}&period=P_T50&format=json`}
 function meshInfoUrl(lon,lat){return `${API_MAP}/pshm/${VER}/${CASE}/TTL_MTTL/meshinfo.geojson?position=${lon},${lat}&epsg=4326`}
@@ -434,17 +431,7 @@ function toXY(sim,prob){
     return pts;
 }
 function pct(v){const n=parseFloat(v);return isNaN(n)?'-':(n*100).toFixed(1)+'%'}
-function jmaLabel(v){
-    if(!v||v==='-')return'-';
-    const m=currentLang==='ja'?{
-        '0':'震度0','1':'震度1','2':'震度2','3':'震度3','4':'震度4',
-        '5L':'震度5弱','5U':'震度5強','6L':'震度6弱','6U':'震度6強','7':'震度7'
-    }:{
-        '0':'JMA 0','1':'JMA 1','2':'JMA 2','3':'JMA 3','4':'JMA 4',
-        '5L':'JMA 5-lower','5U':'JMA 5-upper','6L':'JMA 6-lower','6U':'JMA 6-upper','7':'JMA 7'
-    };
-    return m[String(v).trim()]||String(v);
-}
+
 
 // ================================================================
 //  Fetch all data
@@ -479,9 +466,8 @@ async function fetchAllData(lat,lon){
         renderCharts(results);
 
         // Supplementary (non-blocking)
-        const [groundRes,avghzdRes,landslideRes,faultRes,meshInfoRes]=await Promise.allSettled([
+        const [groundRes,landslideRes,faultRes,meshInfoRes]=await Promise.allSettled([
             fetch(sstrctUrl(lonS,latS)).then(r=>r.json()),
-            fetch(avghzdUrl(lonS,latS)).then(r=>r.json()),
             fetch(landslideUrl(lonS,latS)).then(r=>r.json()),
             fetch(fltsearchUrl(lonS,latS)).then(r=>r.json()),
             fetch(meshInfoUrl(lonS,latS)).then(r=>r.json())
@@ -499,19 +485,14 @@ async function fetchAllData(lat,lon){
         }else{lastLandslide=null}
         renderGround(lastGround,lastLandslide);
 
-        // Return period
-        if(avghzdRes.status==='fulfilled'){
-            const p=avghzdRes.value?.features?.[0]?.properties||avghzdRes.value?.properties||{};
-            lastReturn=p;
-            renderReturn(p);
-        }else{lastReturn=null;renderReturn(null)}
-
-        // Mesh info (exceedance probability)
+        // Mesh info (exceedance probability + intensity by exceedance level)
         if(meshInfoRes.status==='fulfilled'){
             const p=meshInfoRes.value?.features?.[0]?.properties||meshInfoRes.value?.properties||{};
             lastMeshInfo=p;
+            lastReturn=p;
             renderMeshInfo(p);
-        }else{lastMeshInfo=null;renderMeshInfo(null)}
+            renderReturn(p);
+        }else{lastMeshInfo=null;lastReturn=null;renderMeshInfo(null);renderReturn(null)}
 
         // Faults
         if(faultRes.status==='fulfilled'){
@@ -555,9 +536,9 @@ function renderReturn(p){
     if(!p){document.getElementById('returnTable').style.display='none';document.getElementById('returnPlaceholder').style.display='';return}
     document.getElementById('returnPlaceholder').style.display='none';
     document.getElementById('returnTable').style.display='';
-    const map={A0500_SI:'dispA500',A1000_SI:'dispA1000',A5000_SI:'dispA5000',A010K_SI:'dispA10K',A050K_SI:'dispA50K',A100K_SI:'dispA100K'};
+    const map={T50_P39_SI:'dispP39',T50_P10_SI:'dispP10',T50_P05_SI:'dispP05',T50_P02_SI:'dispP02'};
     for(const[k,id]of Object.entries(map)){
-        const v=p[k];document.getElementById(id).textContent=v?jmaLabel(v):'-';
+        const v=p[k];document.getElementById(id).textContent=v?parseFloat(v).toFixed(1):'-';
     }
 }
 
@@ -670,12 +651,12 @@ function downloadSiteCSV(){
         for(const[k,label]of Object.entries(mp))lines.push(`${label},${lastMeshInfo[k]||''}`);
         lines.push('');
     }
-    // Return period
+    // Exceedance probability intensity
     if(lastReturn){
         lines.push(`[${t('returnTitle')}]`);
         lines.push(`${t('csvReturnPeriod')},${t('csvIntensity')}`);
-        const rp={A0500_SI:'500',A1000_SI:'1000',A5000_SI:'5000',A010K_SI:'10000',A050K_SI:'50000',A100K_SI:'100000'};
-        for(const[k,yr]of Object.entries(rp))lines.push(`${yr},${lastReturn[k]||''}`);
+        const rp={T50_P39_SI:'39%(≒100yr)',T50_P10_SI:'10%(≒475yr)',T50_P05_SI:'5%(≒975yr)',T50_P02_SI:'2%(≒2475yr)'};
+        for(const[k,label]of Object.entries(rp))lines.push(`${label},${lastReturn[k]||''}`);
         lines.push('');
     }
     // Faults
