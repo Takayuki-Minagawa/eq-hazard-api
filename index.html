@@ -4,25 +4,108 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>地震ハザードカーブ表示アプリ</title>
+    <link rel="icon" type="image/svg+xml" href="favicon.svg">
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
     <style>
+        /* ===== CSS Custom Properties (Light / Dark) ===== */
+        :root {
+            --bg-body: #f0f2f5;
+            --bg-panel: #ffffff;
+            --bg-header: linear-gradient(135deg, #1a365d 0%, #2c5282 100%);
+            --bg-table-th: #f7fafc;
+            --bg-input: #ffffff;
+            --bg-status-info: #ebf8ff;
+            --bg-status-loading: #fffff0;
+            --bg-status-success: #f0fff4;
+            --bg-status-error: #fff5f5;
+            --bg-overlay: rgba(255,255,255,0.85);
+            --text-primary: #333333;
+            --text-secondary: #4a5568;
+            --text-muted: #718096;
+            --text-faint: #a0aec0;
+            --text-header-sub: #bee3f8;
+            --border-color: #e2e8f0;
+            --border-input: #cbd5e0;
+            --accent: #3182ce;
+            --accent-hover: #2b6cb0;
+            --chart-grid: rgba(0,0,0,0.06);
+            --chart-text: #666666;
+            --panel-h2: #1a365d;
+            --spinner-track: #e2e8f0;
+            --placeholder-border: #e2e8f0;
+            --shadow-panel: 0 1px 4px rgba(0,0,0,0.08);
+        }
+        body.dark {
+            --bg-body: #0f172a;
+            --bg-panel: #1e293b;
+            --bg-header: linear-gradient(135deg, #0f172a 0%, #1e3a5f 100%);
+            --bg-table-th: #283548;
+            --bg-input: #2d3a4d;
+            --bg-status-info: #1a2744;
+            --bg-status-loading: #2d2a1a;
+            --bg-status-success: #1a2e22;
+            --bg-status-error: #2e1a1a;
+            --bg-overlay: rgba(15,23,42,0.85);
+            --text-primary: #e2e8f0;
+            --text-secondary: #cbd5e0;
+            --text-muted: #94a3b8;
+            --text-faint: #64748b;
+            --text-header-sub: #7db8e0;
+            --border-color: #334155;
+            --border-input: #475569;
+            --accent: #60a5fa;
+            --accent-hover: #3b82f6;
+            --chart-grid: rgba(255,255,255,0.08);
+            --chart-text: #94a3b8;
+            --panel-h2: #93c5fd;
+            --spinner-track: #334155;
+            --placeholder-border: #334155;
+            --shadow-panel: 0 1px 4px rgba(0,0,0,0.3);
+        }
+
+        /* ===== Base ===== */
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
             font-family: "Hiragino Sans", "Yu Gothic", "Meiryo", sans-serif;
-            background: #f0f2f5;
-            color: #333;
+            background: var(--bg-body);
+            color: var(--text-primary);
+            transition: background 0.3s, color 0.3s;
         }
+
+        /* ===== Header ===== */
         header {
-            background: linear-gradient(135deg, #1a365d 0%, #2c5282 100%);
+            background: var(--bg-header);
             color: #fff;
-            padding: 14px 24px;
+            padding: 12px 24px;
             box-shadow: 0 2px 8px rgba(0,0,0,0.15);
         }
+        .header-inner {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            max-width: 1440px;
+            margin: 0 auto;
+            gap: 12px;
+        }
         header h1 { font-size: 1.25rem; font-weight: 700; }
-        header p { font-size: 0.8rem; color: #bee3f8; margin-top: 3px; }
+        header p { font-size: 0.8rem; color: var(--text-header-sub); margin-top: 2px; }
+        .header-controls { display: flex; gap: 8px; flex-shrink: 0; }
+        .btn-header {
+            padding: 5px 14px;
+            background: rgba(255,255,255,0.15);
+            color: #fff;
+            border: 1px solid rgba(255,255,255,0.3);
+            border-radius: 4px;
+            font-size: 0.8rem;
+            cursor: pointer;
+            transition: background 0.2s;
+            white-space: nowrap;
+        }
+        .btn-header:hover { background: rgba(255,255,255,0.25); }
 
+        /* ===== Grid Layout ===== */
         .main-grid {
             display: grid;
             grid-template-columns: 1fr 1fr;
@@ -32,29 +115,30 @@
             margin: 0 auto;
         }
         .panel {
-            background: #fff;
+            background: var(--bg-panel);
             border-radius: 8px;
-            box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+            box-shadow: var(--shadow-panel);
             padding: 16px;
+            transition: background 0.3s, box-shadow 0.3s;
         }
         .panel h2 {
             font-size: 0.95rem;
-            color: #1a365d;
-            border-left: 4px solid #3182ce;
+            color: var(--panel-h2);
+            border-left: 4px solid var(--accent);
             padding-left: 10px;
             margin-bottom: 12px;
         }
 
-        /* Map */
+        /* ===== Map ===== */
         .map-panel { grid-column: 1; }
         #map {
             height: 420px;
             border-radius: 6px;
-            border: 1px solid #e2e8f0;
+            border: 1px solid var(--border-color);
             cursor: crosshair;
         }
 
-        /* Info */
+        /* ===== Info ===== */
         .info-panel { grid-column: 2; }
         .coord-inputs {
             display: grid;
@@ -66,32 +150,36 @@
         .coord-inputs label {
             display: block;
             font-size: 0.78rem;
-            color: #718096;
+            color: var(--text-muted);
             margin-bottom: 3px;
         }
         .coord-inputs input {
             width: 100%;
             padding: 7px 10px;
-            border: 1px solid #cbd5e0;
+            border: 1px solid var(--border-input);
             border-radius: 4px;
             font-size: 0.9rem;
+            background: var(--bg-input);
+            color: var(--text-primary);
+            transition: background 0.3s, border-color 0.3s, color 0.3s;
         }
         .coord-inputs input:focus {
             outline: none;
-            border-color: #3182ce;
+            border-color: var(--accent);
             box-shadow: 0 0 0 2px rgba(49,130,206,0.2);
         }
         .btn {
             padding: 7px 16px;
-            background: #3182ce;
+            background: var(--accent);
             color: #fff;
             border: none;
             border-radius: 4px;
             font-size: 0.85rem;
             cursor: pointer;
             white-space: nowrap;
+            transition: background 0.2s;
         }
-        .btn:hover { background: #2b6cb0; }
+        .btn:hover { background: var(--accent-hover); }
         .btn:disabled { background: #a0aec0; cursor: not-allowed; }
 
         .info-table {
@@ -103,15 +191,16 @@
         .info-table th {
             text-align: left;
             padding: 6px 10px;
-            background: #f7fafc;
-            color: #4a5568;
+            background: var(--bg-table-th);
+            color: var(--text-secondary);
             font-weight: 600;
             width: 40%;
-            border-bottom: 1px solid #e2e8f0;
+            border-bottom: 1px solid var(--border-color);
+            transition: background 0.3s, color 0.3s;
         }
         .info-table td {
             padding: 6px 10px;
-            border-bottom: 1px solid #e2e8f0;
+            border-bottom: 1px solid var(--border-color);
         }
 
         #status {
@@ -120,24 +209,61 @@
             font-size: 0.85rem;
             margin-top: 12px;
             line-height: 1.5;
+            transition: background 0.3s, color 0.3s;
         }
-        .status-info { background: #ebf8ff; color: #2b6cb0; }
-        .status-loading { background: #fffff0; color: #b7791f; }
-        .status-success { background: #f0fff4; color: #276749; }
-        .status-error { background: #fff5f5; color: #c53030; }
+        .status-info    { background: var(--bg-status-info);    color: #2b6cb0; }
+        .status-loading { background: var(--bg-status-loading); color: #b7791f; }
+        .status-success { background: var(--bg-status-success); color: #276749; }
+        .status-error   { background: var(--bg-status-error);   color: #c53030; }
+        body.dark .status-info    { color: #90cdf4; }
+        body.dark .status-loading { color: #fbd38d; }
+        body.dark .status-success { color: #9ae6b4; }
+        body.dark .status-error   { color: #feb2b2; }
+
+        /* ===== Download Section ===== */
+        .download-section {
+            display: none;
+            margin-top: 14px;
+            padding-top: 14px;
+            border-top: 1px solid var(--border-color);
+        }
+        .download-section.visible { display: block; }
+        .download-section h3 {
+            font-size: 0.82rem;
+            color: var(--text-muted);
+            margin-bottom: 8px;
+        }
+        .download-btns {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+        .btn-dl {
+            padding: 6px 14px;
+            background: transparent;
+            color: var(--accent);
+            border: 1px solid var(--accent);
+            border-radius: 4px;
+            font-size: 0.82rem;
+            cursor: pointer;
+            transition: background 0.2s, color 0.2s;
+            white-space: nowrap;
+        }
+        .btn-dl:hover {
+            background: var(--accent);
+            color: #fff;
+        }
 
         .api-note {
             font-size: 0.75rem;
-            color: #a0aec0;
+            color: var(--text-faint);
             margin-top: 16px;
             line-height: 1.6;
         }
-        .api-note a { color: #718096; }
+        .api-note a { color: var(--text-muted); }
 
-        /* Charts */
-        .chart-panel {
-            grid-column: 1 / -1;
-        }
+        /* ===== Charts ===== */
+        .chart-panel { grid-column: 1 / -1; }
         .charts-row {
             display: grid;
             grid-template-columns: 1fr 1fr;
@@ -145,7 +271,7 @@
         }
         .chart-wrapper h3 {
             font-size: 0.88rem;
-            color: #2d3748;
+            color: var(--text-secondary);
             text-align: center;
             margin-bottom: 8px;
         }
@@ -158,18 +284,18 @@
             align-items: center;
             justify-content: center;
             height: 420px;
-            color: #a0aec0;
+            color: var(--text-faint);
             font-size: 0.9rem;
-            border: 2px dashed #e2e8f0;
+            border: 2px dashed var(--placeholder-border);
             border-radius: 6px;
         }
 
-        /* Loading overlay */
+        /* ===== Loading ===== */
         .loading-overlay {
             display: none;
             position: absolute;
             inset: 0;
-            background: rgba(255,255,255,0.8);
+            background: var(--bg-overlay);
             align-items: center;
             justify-content: center;
             border-radius: 6px;
@@ -177,77 +303,97 @@
         }
         .loading-overlay.active { display: flex; }
         .spinner {
-            width: 36px;
-            height: 36px;
-            border: 3px solid #e2e8f0;
-            border-top-color: #3182ce;
+            width: 36px; height: 36px;
+            border: 3px solid var(--spinner-track);
+            border-top-color: var(--accent);
             border-radius: 50%;
             animation: spin 0.7s linear infinite;
         }
         @keyframes spin { to { transform: rotate(360deg); } }
 
+        /* ===== Responsive ===== */
         @media (max-width: 960px) {
             .main-grid { grid-template-columns: 1fr; }
             .map-panel, .info-panel, .chart-panel { grid-column: 1; }
             .charts-row { grid-template-columns: 1fr; }
+            .header-inner { flex-wrap: wrap; }
         }
     </style>
 </head>
 <body>
     <header>
-        <h1>地震ハザードカーブ表示アプリ</h1>
-        <p>J-SHIS（防災科学技術研究所）より50年超過確率（平均ケース）を取得・表示</p>
+        <div class="header-inner">
+            <div>
+                <h1 data-i18n="title">地震ハザードカーブ表示アプリ</h1>
+                <p data-i18n="subtitle">J-SHIS（防災科学技術研究所）より50年超過確率（平均ケース）を取得・表示</p>
+            </div>
+            <div class="header-controls">
+                <button class="btn-header" id="btnLang" onclick="toggleLang()">EN</button>
+                <button class="btn-header" id="btnTheme" onclick="toggleTheme()" data-i18n="btnTheme">ダークモード</button>
+            </div>
+        </div>
     </header>
 
     <div class="main-grid">
-        <!-- Map Panel -->
+        <!-- Map -->
         <div class="panel map-panel">
-            <h2>対象地点の選択</h2>
+            <h2 data-i18n="mapTitle">対象地点の選択</h2>
             <div id="map"></div>
         </div>
 
-        <!-- Info Panel -->
+        <!-- Info -->
         <div class="panel info-panel">
-            <h2>地点情報・座標入力</h2>
+            <h2 data-i18n="infoTitle">地点情報・座標入力</h2>
             <div class="coord-inputs">
                 <div>
-                    <label for="inputLat">緯度（°N）</label>
-                    <input type="number" id="inputLat" step="0.0001" min="20" max="47" placeholder="例: 35.6812">
+                    <label for="inputLat" data-i18n="labelLat">緯度（°N）</label>
+                    <input type="number" id="inputLat" step="0.0001" min="20" max="47" placeholder="35.6812">
                 </div>
                 <div>
-                    <label for="inputLng">経度（°E）</label>
-                    <input type="number" id="inputLng" step="0.0001" min="122" max="154" placeholder="例: 139.7671">
+                    <label for="inputLng" data-i18n="labelLng">経度（°E）</label>
+                    <input type="number" id="inputLng" step="0.0001" min="122" max="154" placeholder="139.7671">
                 </div>
-                <button class="btn" id="btnFetch" onclick="fetchFromInput()">取得</button>
+                <button class="btn" id="btnFetch" onclick="fetchFromInput()" data-i18n="btnFetch">取得</button>
             </div>
             <table class="info-table">
-                <tr><th>選択緯度</th><td id="dispLat">-</td></tr>
-                <tr><th>選択経度</th><td id="dispLng">-</td></tr>
-                <tr><th>メッシュコード</th><td id="dispMesh">-</td></tr>
-                <tr><th>データバージョン</th><td id="dispVersion">-</td></tr>
+                <tr><th data-i18n="thLat">選択緯度</th><td id="dispLat">-</td></tr>
+                <tr><th data-i18n="thLng">選択経度</th><td id="dispLng">-</td></tr>
+                <tr><th data-i18n="thMesh">メッシュコード</th><td id="dispMesh">-</td></tr>
+                <tr><th data-i18n="thVersion">データバージョン</th><td id="dispVersion">-</td></tr>
             </table>
-            <div id="status" class="status-info">
+            <div id="status" class="status-info" data-i18n="statusInit">
                 地図をクリック、または座標を入力して「取得」ボタンを押してください。
             </div>
+
+            <!-- Download -->
+            <div class="download-section" id="downloadSection">
+                <h3 data-i18n="dlTitle">CSV ダウンロード</h3>
+                <div class="download-btns">
+                    <button class="btn-dl" onclick="downloadRawCSV()" data-i18n="dlRaw">取得データ CSV</button>
+                    <button class="btn-dl" onclick="downloadCalcCSV()" data-i18n="dlCalc">算定データ CSV</button>
+                </div>
+            </div>
+
             <div class="api-note">
-                データ出典:
+                <span data-i18n="noteSource">データ出典:</span>
                 <a href="https://www.j-shis.bosai.go.jp/" target="_blank" rel="noopener">
-                    地震ハザードステーション J-SHIS
-                </a>（防災科学技術研究所）<br>
-                バージョン: Y2024 ／ 平均ケース(AVR) ／ 50年超過確率(T50)<br>
-                地震動指標: 工学的基盤最大速度 PBV [cm/s]
+                    J-SHIS
+                </a>
+                <span data-i18n="noteOrg">（防災科学技術研究所）</span><br>
+                <span data-i18n="noteSpec">バージョン: Y2024 / 平均ケース(AVR) / 50年超過確率(T50)</span><br>
+                <span data-i18n="noteMetric">地震動指標: 工学的基盤最大速度 PBV [cm/s]</span>
             </div>
         </div>
 
-        <!-- Charts Panel -->
+        <!-- Charts -->
         <div class="panel chart-panel">
-            <h2>ハザードカーブ</h2>
+            <h2 data-i18n="chartMainTitle">ハザードカーブ</h2>
             <div class="charts-row">
                 <div class="chart-wrapper">
-                    <h3>カテゴリ別ハザードカーブ</h3>
+                    <h3 data-i18n="chartCatTitle">カテゴリ別ハザードカーブ</h3>
                     <div style="position:relative;">
-                        <div class="chart-container" id="chartCatContainer">
-                            <div class="chart-placeholder" id="placeholderCat">
+                        <div class="chart-container">
+                            <div class="chart-placeholder" id="placeholderCat" data-i18n="chartPlaceholder">
                                 地点を選択するとハザードカーブが表示されます
                             </div>
                             <canvas id="chartCategories" style="display:none;"></canvas>
@@ -256,10 +402,10 @@
                     </div>
                 </div>
                 <div class="chart-wrapper">
-                    <h3>地震タイプ別ハザードカーブ（海溝型 vs 直下型）</h3>
+                    <h3 data-i18n="chartTypeTitle">地震タイプ別ハザードカーブ（海溝型 vs 直下型）</h3>
                     <div style="position:relative;">
-                        <div class="chart-container" id="chartTypeContainer">
-                            <div class="chart-placeholder" id="placeholderType">
+                        <div class="chart-container">
+                            <div class="chart-placeholder" id="placeholderType" data-i18n="chartPlaceholder">
                                 地点を選択するとハザードカーブが表示されます
                             </div>
                             <canvas id="chartTypes" style="display:none;"></canvas>
@@ -271,320 +417,620 @@
         </div>
     </div>
 
-    <script>
-    // ========== Configuration ==========
-    const API_BASE = 'https://www.j-shis.bosai.go.jp/map/api/pshm';
-    const VERSION  = 'Y2024';
-    const AVR      = 'AVR';
-    const T50      = 'T50';
-
-    const EQ_CODES = {
-        TTL:   'TTL_MTTL',   // 全ての地震
-        CAT1:  'PLE_MTTL',   // カテゴリーI（海溝型・震源断層特定）
-        CAT2:  'PSE_MTTL',   // カテゴリーII（海溝型・震源断層非特定）
-        CAT3:  'LND_MTTL',   // カテゴリーIII（活断層・直下型）
-        CAT12: 'PPE_MTTL'    // カテゴリーI+II 複合（海溝型地震）
-    };
-
-    function apiUrl(eqcode, lon, lat) {
-        return `${API_BASE}/${VERSION}/${AVR}/${eqcode}/${T50}/hzcv.json?position=${lon},${lat}&epsg=4326`;
+<script>
+// ================================================================
+//  Internationalization (i18n)
+// ================================================================
+const I18N = {
+    ja: {
+        htmlTitle: '地震ハザードカーブ表示アプリ',
+        title: '地震ハザードカーブ表示アプリ',
+        subtitle: 'J-SHIS（防災科学技術研究所）より50年超過確率（平均ケース）を取得・表示',
+        btnTheme: 'ダークモード',
+        btnThemeLight: 'ライトモード',
+        mapTitle: '対象地点の選択',
+        infoTitle: '地点情報・座標入力',
+        labelLat: '緯度（°N）',
+        labelLng: '経度（°E）',
+        btnFetch: '取得',
+        thLat: '選択緯度',
+        thLng: '選択経度',
+        thMesh: 'メッシュコード',
+        thVersion: 'データバージョン',
+        statusInit: '地図をクリック、または座標を入力して「取得」ボタンを押してください。',
+        statusLoading: 'J-SHIS API からデータを取得中...',
+        statusSuccess: 'データ取得完了（メッシュ: {mesh}）',
+        statusErrorFetch: 'データ取得エラー: {msg}',
+        statusErrorCors: '\n※ CORS制限の可能性があります。ローカルサーバー経由でお試しください。',
+        statusErrorRange: '日本国内の地点を選択してください（緯度20-47°、経度122-154°）',
+        statusErrorInput: '緯度・経度を正しく入力してください。',
+        dlTitle: 'CSV ダウンロード',
+        dlRaw: '取得データ CSV',
+        dlCalc: '算定データ CSV',
+        noteSource: 'データ出典:',
+        noteOrg: '（防災科学技術研究所）',
+        noteSpec: 'バージョン: Y2024 / 平均ケース(AVR) / 50年超過確率(T50)',
+        noteMetric: '地震動指標: 工学的基盤最大速度 PBV [cm/s]',
+        chartMainTitle: 'ハザードカーブ',
+        chartCatTitle: 'カテゴリ別ハザードカーブ',
+        chartTypeTitle: '地震タイプ別ハザードカーブ（海溝型 vs 直下型）',
+        chartPlaceholder: '地点を選択するとハザードカーブが表示されます',
+        xAxisLabel: '工学的基盤最大速度 PBV [cm/s]',
+        yAxisLabel: '超過確率',
+        lblTTL:   '全ての地震',
+        lblCAT1:  'カテゴリーI（海溝型・特定）',
+        lblCAT2:  'カテゴリーII（海溝型・非特定）',
+        lblCAT3:  'カテゴリーIII（直下型）',
+        lblCAT12: '海溝型地震（カテゴリーI+II）',
+        lblCAT3b: '直下型地震（カテゴリーIII）',
+        tooltipPBV: 'PBV',
+        tooltipProb: '超過確率',
+        popupTitle: '選択地点',
+        popupLat: '緯度',
+        popupLng: '経度',
+        csvHeaderRaw: '地震ハザードカーブ 取得データ（APIレスポンス）',
+        csvHeaderCalc: '地震ハザードカーブ 算定データ（海溝型・直下型）',
+        csvLat: '緯度',
+        csvLng: '経度',
+        csvMesh: 'メッシュコード',
+        csvVersion: 'バージョン',
+        csvColPBV: 'PBV[cm/s]',
+        csvColTTL: '全地震(TTL_MTTL)',
+        csvColCAT1: 'カテゴリーI(PLE_MTTL)',
+        csvColCAT2: 'カテゴリーII(PSE_MTTL)',
+        csvColCAT3: 'カテゴリーIII(LND_MTTL)',
+        csvColCAT12: 'カテゴリーI+II(PPE_MTTL)',
+        csvColSub: '海溝型地震(I+II)',
+        csvColCru: '直下型地震(III)',
+        fetching: '取得中...'
+    },
+    en: {
+        htmlTitle: 'Seismic Hazard Curve Viewer',
+        title: 'Seismic Hazard Curve Viewer',
+        subtitle: '50-year exceedance probability (average case) from J-SHIS (NIED)',
+        btnTheme: 'Dark Mode',
+        btnThemeLight: 'Light Mode',
+        mapTitle: 'Select Target Location',
+        infoTitle: 'Location Info / Coordinate Input',
+        labelLat: 'Latitude (°N)',
+        labelLng: 'Longitude (°E)',
+        btnFetch: 'Fetch',
+        thLat: 'Latitude',
+        thLng: 'Longitude',
+        thMesh: 'Mesh Code',
+        thVersion: 'Data Version',
+        statusInit: 'Click the map or enter coordinates and press "Fetch".',
+        statusLoading: 'Fetching data from J-SHIS API...',
+        statusSuccess: 'Data loaded successfully (Mesh: {mesh})',
+        statusErrorFetch: 'Fetch error: {msg}',
+        statusErrorCors: '\n* Possibly blocked by CORS. Try via a local server.',
+        statusErrorRange: 'Please select a location within Japan (Lat 20-47°, Lon 122-154°)',
+        statusErrorInput: 'Please enter valid latitude and longitude.',
+        dlTitle: 'CSV Download',
+        dlRaw: 'Raw Data CSV',
+        dlCalc: 'Calculated Data CSV',
+        noteSource: 'Data source:',
+        noteOrg: ' (NIED)',
+        noteSpec: 'Version: Y2024 / Average(AVR) / 50-year exceedance(T50)',
+        noteMetric: 'Metric: Peak Bedrock Velocity PBV [cm/s]',
+        chartMainTitle: 'Hazard Curves',
+        chartCatTitle: 'Hazard Curves by Category',
+        chartTypeTitle: 'Hazard Curves by Earthquake Type (Subduction vs Crustal)',
+        chartPlaceholder: 'Select a location to display hazard curves',
+        xAxisLabel: 'Peak Bedrock Velocity PBV [cm/s]',
+        yAxisLabel: 'Exceedance Probability',
+        lblTTL:   'All Earthquakes',
+        lblCAT1:  'Category I (Subduction, specified)',
+        lblCAT2:  'Category II (Subduction, unspecified)',
+        lblCAT3:  'Category III (Crustal)',
+        lblCAT12: 'Subduction (Category I+II)',
+        lblCAT3b: 'Crustal (Category III)',
+        tooltipPBV: 'PBV',
+        tooltipProb: 'Exc. Prob.',
+        popupTitle: 'Selected Location',
+        popupLat: 'Lat',
+        popupLng: 'Lon',
+        csvHeaderRaw: 'Seismic Hazard Curve - Raw API Data',
+        csvHeaderCalc: 'Seismic Hazard Curve - Calculated Data (Subduction / Crustal)',
+        csvLat: 'Latitude',
+        csvLng: 'Longitude',
+        csvMesh: 'Mesh Code',
+        csvVersion: 'Version',
+        csvColPBV: 'PBV[cm/s]',
+        csvColTTL: 'All(TTL_MTTL)',
+        csvColCAT1: 'CategoryI(PLE_MTTL)',
+        csvColCAT2: 'CategoryII(PSE_MTTL)',
+        csvColCAT3: 'CategoryIII(LND_MTTL)',
+        csvColCAT12: 'CategoryI+II(PPE_MTTL)',
+        csvColSub: 'Subduction(I+II)',
+        csvColCru: 'Crustal(III)',
+        fetching: 'Fetching...'
     }
+};
 
-    // ========== Map Initialization ==========
-    const map = L.map('map', { zoomControl: true }).setView([36.2, 138.0], 5);
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
-        maxZoom: 18
-    }).addTo(map);
+// ================================================================
+//  Application State
+// ================================================================
+let currentLang = 'ja';
+let isDark = false;
+let lastResults = null;
+let lastLat = null;
+let lastLon = null;
+let marker = null;
+let chartCat = null;
+let chartType = null;
+let isFetching = false;
 
-    let marker = null;
-    let chartCat = null;
-    let chartType = null;
-    let isFetching = false;
+function t(key) { return I18N[currentLang][key] || key; }
 
-    // ========== Status Helpers ==========
-    function setStatus(msg, type) {
-        const el = document.getElementById('status');
-        el.textContent = msg;
-        el.className = 'status-' + type;
-    }
-
-    function showLoading(show) {
-        const method = show ? 'add' : 'remove';
-        document.getElementById('loadingCat').classList[method]('active');
-        document.getElementById('loadingType').classList[method]('active');
-        document.getElementById('btnFetch').disabled = show;
-        isFetching = show;
-    }
-
-    // ========== Data Conversion ==========
-    function toXY(simArr, probArr) {
-        const pts = [];
-        for (let i = 0; i < simArr.length && i < probArr.length; i++) {
-            const x = parseFloat(simArr[i]);
-            const y = parseFloat(probArr[i]);
-            if (y > 0 && !isNaN(x) && !isNaN(y)) {
-                pts.push({ x, y });
-            }
+// ================================================================
+//  i18n: Apply translations
+// ================================================================
+function applyLang() {
+    document.documentElement.lang = currentLang;
+    document.title = t('htmlTitle');
+    document.querySelectorAll('[data-i18n]').forEach(el => {
+        const key = el.getAttribute('data-i18n');
+        // Theme button shows current-mode-aware label
+        if (key === 'btnTheme') {
+            el.textContent = isDark ? t('btnThemeLight') : t('btnTheme');
+            return;
         }
-        return pts;
-    }
+        if (I18N[currentLang][key] !== undefined) {
+            el.textContent = I18N[currentLang][key];
+        }
+    });
+    document.getElementById('btnLang').textContent = currentLang === 'ja' ? 'EN' : 'JA';
+    // Re-render charts with new labels
+    if (lastResults) renderCharts(lastResults);
+}
 
-    // ========== API Fetch ==========
-    async function fetchHazardCurves(lat, lon) {
-        if (isFetching) return;
-        showLoading(true);
-        setStatus('J-SHIS API からデータを取得中...', 'loading');
+function toggleLang() {
+    currentLang = currentLang === 'ja' ? 'en' : 'ja';
+    applyLang();
+}
 
-        // Update display
-        document.getElementById('dispLat').textContent = lat.toFixed(4) + '°N';
-        document.getElementById('dispLng').textContent = lon.toFixed(4) + '°E';
-        document.getElementById('dispMesh').textContent = '取得中...';
-        document.getElementById('dispVersion').textContent = VERSION;
+// ================================================================
+//  Dark / Light Mode
+// ================================================================
+function applyTheme() {
+    document.body.classList.toggle('dark', isDark);
+    const btn = document.getElementById('btnTheme');
+    btn.textContent = isDark ? t('btnThemeLight') : t('btnTheme');
+    // Re-render charts so grid/text colors update
+    if (lastResults) renderCharts(lastResults);
+}
 
-        // Update input fields
-        document.getElementById('inputLat').value = lat.toFixed(4);
-        document.getElementById('inputLng').value = lon.toFixed(4);
+function toggleTheme() {
+    isDark = !isDark;
+    applyTheme();
+}
 
-        const results = {};
+// ================================================================
+//  Configuration
+// ================================================================
+const API_BASE = 'https://www.j-shis.bosai.go.jp/map/api/pshm';
+const VERSION  = 'Y2024';
+const AVR      = 'AVR';
+const T50      = 'T50';
 
-        try {
-            const entries = Object.entries(EQ_CODES);
-            const fetches = entries.map(([key, code]) =>
-                fetch(apiUrl(code, lon.toFixed(6), lat.toFixed(6)))
-                    .then(res => {
-                        if (!res.ok) throw new Error(`HTTP ${res.status} (${code})`);
-                        return res.json();
-                    })
-                    .then(json => {
-                        if (json.status !== 'Success') {
-                            throw new Error(json.error?.message || `APIエラー (${code})`);
-                        }
-                        return { key, json };
-                    })
-            );
+const EQ_CODES = {
+    TTL:   'TTL_MTTL',
+    CAT1:  'PLE_MTTL',
+    CAT2:  'PSE_MTTL',
+    CAT3:  'LND_MTTL',
+    CAT12: 'PPE_MTTL'
+};
 
-            const responses = await Promise.all(fetches);
-            for (const { key, json } of responses) {
-                results[key] = {
-                    sim:  json.sim.value,
-                    prob: json.prob.value,
-                    mesh: json.prob.meshcode || json.metaData.meshcode
-                };
-            }
+function apiUrl(eqcode, lon, lat) {
+    return `${API_BASE}/${VERSION}/${AVR}/${eqcode}/${T50}/hzcv.json?position=${lon},${lat}&epsg=4326`;
+}
 
-            document.getElementById('dispMesh').textContent = results.TTL.mesh;
-            renderCharts(results);
-            setStatus(
-                `データ取得完了（メッシュ: ${results.TTL.mesh}）`,
-                'success'
-            );
+// ================================================================
+//  Map Initialization
+// ================================================================
+const map = L.map('map', { zoomControl: true }).setView([36.2, 138.0], 5);
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+    maxZoom: 18
+}).addTo(map);
 
-        } catch (err) {
-            console.error('Fetch error:', err);
-            let msg = `データ取得エラー: ${err.message}`;
-            if (err.message.includes('Failed to fetch') || err.message.includes('NetworkError')) {
-                msg += '\n※ CORS制限の可能性があります。ローカルサーバー経由でお試しください。';
-            }
-            setStatus(msg, 'error');
-            document.getElementById('dispMesh').textContent = '-';
-        } finally {
-            showLoading(false);
+// ================================================================
+//  Status / Loading Helpers
+// ================================================================
+function setStatus(msg, type) {
+    const el = document.getElementById('status');
+    el.textContent = msg;
+    el.className = 'status-' + type;
+}
+
+function showLoading(show) {
+    const method = show ? 'add' : 'remove';
+    document.getElementById('loadingCat').classList[method]('active');
+    document.getElementById('loadingType').classList[method]('active');
+    document.getElementById('btnFetch').disabled = show;
+    isFetching = show;
+}
+
+// ================================================================
+//  Data Conversion
+// ================================================================
+function toXY(simArr, probArr) {
+    const pts = [];
+    for (let i = 0; i < simArr.length && i < probArr.length; i++) {
+        const x = parseFloat(simArr[i]);
+        const y = parseFloat(probArr[i]);
+        if (y > 0 && !isNaN(x) && !isNaN(y)) {
+            pts.push({ x, y });
         }
     }
+    return pts;
+}
 
-    // ========== Chart Rendering ==========
-    const CHART_COLORS = {
-        TTL:   { border: '#2d3748', bg: 'rgba(45,55,72,0.08)' },
-        CAT1:  { border: '#63b3ed', bg: 'rgba(99,179,237,0.08)' },
-        CAT2:  { border: '#48bb78', bg: 'rgba(72,187,120,0.08)' },
-        CAT3:  { border: '#ecc94b', bg: 'rgba(236,201,75,0.08)' },
-        CAT12: { border: '#ed8936', bg: 'rgba(237,137,54,0.08)' }
-    };
+// ================================================================
+//  API Fetch
+// ================================================================
+async function fetchHazardCurves(lat, lon) {
+    if (isFetching) return;
+    showLoading(true);
+    setStatus(t('statusLoading'), 'loading');
+    lastLat = lat;
+    lastLon = lon;
 
-    function makeChartConfig(datasets, xMax) {
-        return {
-            type: 'scatter',
-            data: { datasets },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                interaction: {
-                    mode: 'nearest',
-                    axis: 'x',
-                    intersect: false
-                },
-                plugins: {
-                    legend: {
-                        position: 'top',
-                        labels: {
-                            usePointStyle: true,
-                            pointStyle: 'line',
-                            padding: 14,
-                            font: { size: 12 }
-                        }
-                    },
-                    tooltip: {
-                        callbacks: {
-                            label: function(ctx) {
-                                const p = ctx.parsed.y;
-                                const pStr = p >= 0.001
-                                    ? p.toFixed(4)
-                                    : p.toExponential(2);
-                                return `${ctx.dataset.label}: PBV=${ctx.parsed.x} cm/s, 超過確率=${pStr}`;
-                            }
-                        }
+    document.getElementById('dispLat').textContent = lat.toFixed(4) + '°N';
+    document.getElementById('dispLng').textContent = lon.toFixed(4) + '°E';
+    document.getElementById('dispMesh').textContent = t('fetching');
+    document.getElementById('dispVersion').textContent = VERSION;
+
+    document.getElementById('inputLat').value = lat.toFixed(4);
+    document.getElementById('inputLng').value = lon.toFixed(4);
+
+    const results = {};
+
+    try {
+        const entries = Object.entries(EQ_CODES);
+        const fetches = entries.map(([key, code]) =>
+            fetch(apiUrl(code, lon.toFixed(6), lat.toFixed(6)))
+                .then(res => {
+                    if (!res.ok) throw new Error(`HTTP ${res.status} (${code})`);
+                    return res.json();
+                })
+                .then(json => {
+                    if (json.status !== 'Success') {
+                        throw new Error(json.error?.message || `API Error (${code})`);
+                    }
+                    return { key, json };
+                })
+        );
+
+        const responses = await Promise.all(fetches);
+        for (const { key, json } of responses) {
+            results[key] = {
+                sim:  json.sim.value,
+                prob: json.prob.value,
+                mesh: json.prob.meshcode || json.metaData.meshcode
+            };
+        }
+
+        lastResults = results;
+        document.getElementById('dispMesh').textContent = results.TTL.mesh;
+        document.getElementById('downloadSection').classList.add('visible');
+        renderCharts(results);
+        setStatus(t('statusSuccess').replace('{mesh}', results.TTL.mesh), 'success');
+
+    } catch (err) {
+        console.error('Fetch error:', err);
+        let msg = t('statusErrorFetch').replace('{msg}', err.message);
+        if (err.message.includes('Failed to fetch') || err.message.includes('NetworkError')) {
+            msg += t('statusErrorCors');
+        }
+        setStatus(msg, 'error');
+        document.getElementById('dispMesh').textContent = '-';
+    } finally {
+        showLoading(false);
+    }
+}
+
+// ================================================================
+//  Chart Rendering
+// ================================================================
+const CHART_COLORS = {
+    TTL:   { border: '#2d3748', borderDark: '#e2e8f0' },
+    CAT1:  { border: '#63b3ed', borderDark: '#63b3ed' },
+    CAT2:  { border: '#48bb78', borderDark: '#68d391' },
+    CAT3:  { border: '#ecc94b', borderDark: '#fbd38d' },
+    CAT12: { border: '#ed8936', borderDark: '#f6ad55' }
+};
+
+function clr(key) {
+    return isDark ? CHART_COLORS[key].borderDark : CHART_COLORS[key].border;
+}
+
+function makeChartConfig(datasets, xMax) {
+    const gridColor = isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.06)';
+    const tickColor = isDark ? '#94a3b8' : '#666666';
+    const titleColor = isDark ? '#cbd5e0' : '#333333';
+
+    return {
+        type: 'scatter',
+        data: { datasets },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            interaction: { mode: 'nearest', axis: 'x', intersect: false },
+            plugins: {
+                legend: {
+                    position: 'top',
+                    labels: {
+                        usePointStyle: true,
+                        pointStyle: 'line',
+                        padding: 14,
+                        font: { size: 12 },
+                        color: tickColor
                     }
                 },
-                scales: {
-                    x: {
-                        type: 'linear',
-                        min: 0,
-                        max: xMax,
-                        title: {
-                            display: true,
-                            text: '工学的基盤最大速度 PBV [cm/s]',
-                            font: { size: 13, weight: 'bold' }
-                        },
-                        grid: { color: 'rgba(0,0,0,0.06)' },
-                        ticks: { stepSize: xMax <= 100 ? 10 : 25 }
-                    },
-                    y: {
-                        type: 'logarithmic',
-                        min: 0.001,
-                        max: 1,
-                        title: {
-                            display: true,
-                            text: '超過確率',
-                            font: { size: 13, weight: 'bold' }
-                        },
-                        grid: { color: 'rgba(0,0,0,0.06)' },
-                        ticks: {
-                            callback: function(value) {
-                                const log = Math.log10(value);
-                                if (Math.abs(log - Math.round(log)) < 0.01) {
-                                    if (value >= 0.01) return value.toString();
-                                    return value.toExponential(0);
-                                }
-                                return '';
-                            },
-                            autoSkip: false,
-                            maxTicksLimit: 10
+                tooltip: {
+                    callbacks: {
+                        label: function(ctx) {
+                            const p = ctx.parsed.y;
+                            const pStr = p >= 0.001 ? p.toFixed(4) : p.toExponential(2);
+                            return `${ctx.dataset.label}: ${t('tooltipPBV')}=${ctx.parsed.x} cm/s, ${t('tooltipProb')}=${pStr}`;
                         }
                     }
                 }
+            },
+            scales: {
+                x: {
+                    type: 'linear',
+                    min: 0,
+                    max: xMax,
+                    title: {
+                        display: true,
+                        text: t('xAxisLabel'),
+                        font: { size: 13, weight: 'bold' },
+                        color: titleColor
+                    },
+                    grid: { color: gridColor },
+                    ticks: { stepSize: xMax <= 100 ? 10 : 25, color: tickColor }
+                },
+                y: {
+                    type: 'logarithmic',
+                    min: 0.001,
+                    max: 1,
+                    title: {
+                        display: true,
+                        text: t('yAxisLabel'),
+                        font: { size: 13, weight: 'bold' },
+                        color: titleColor
+                    },
+                    grid: { color: gridColor },
+                    ticks: {
+                        color: tickColor,
+                        callback: function(value) {
+                            const log = Math.log10(value);
+                            if (Math.abs(log - Math.round(log)) < 0.01) {
+                                if (value >= 0.01) return value.toString();
+                                return value.toExponential(0);
+                            }
+                            return '';
+                        },
+                        autoSkip: false,
+                        maxTicksLimit: 10
+                    }
+                }
             }
-        };
+        }
+    };
+}
+
+function ds(label, data, colorKey, width) {
+    return {
+        label,
+        data,
+        borderColor: clr(colorKey),
+        borderWidth: width || 2,
+        showLine: true,
+        pointRadius: 0,
+        pointHoverRadius: 4,
+        tension: 0.3
+    };
+}
+
+function renderCharts(R) {
+    document.getElementById('placeholderCat').style.display = 'none';
+    document.getElementById('placeholderType').style.display = 'none';
+    document.getElementById('chartCategories').style.display = 'block';
+    document.getElementById('chartTypes').style.display = 'block';
+
+    if (chartCat)  { chartCat.destroy();  chartCat = null; }
+    if (chartType) { chartType.destroy(); chartType = null; }
+
+    // Chart 1: Category breakdown
+    const dsCat = [
+        ds(t('lblTTL'),  toXY(R.TTL.sim,  R.TTL.prob),  'TTL',  2.5),
+        ds(t('lblCAT1'), toXY(R.CAT1.sim, R.CAT1.prob), 'CAT1', 2),
+        ds(t('lblCAT2'), toXY(R.CAT2.sim, R.CAT2.prob), 'CAT2', 2),
+        ds(t('lblCAT3'), toXY(R.CAT3.sim, R.CAT3.prob), 'CAT3', 2)
+    ];
+    chartCat = new Chart(
+        document.getElementById('chartCategories').getContext('2d'),
+        makeChartConfig(dsCat, 150)
+    );
+
+    // Chart 2: Subduction vs Crustal
+    const dsType = [
+        ds(t('lblCAT12'), toXY(R.CAT12.sim, R.CAT12.prob), 'CAT12', 2.5),
+        ds(t('lblCAT3b'), toXY(R.CAT3.sim,  R.CAT3.prob),  'TTL',   2.5)
+    ];
+    chartType = new Chart(
+        document.getElementById('chartTypes').getContext('2d'),
+        makeChartConfig(dsType, 100)
+    );
+}
+
+// ================================================================
+//  CSV Download
+// ================================================================
+function buildBOM() { return '\uFEFF'; } // UTF-8 BOM for Excel
+
+function csvMeta() {
+    const lines = [];
+    lines.push(`${t('csvLat')},${lastLat.toFixed(4)}N`);
+    lines.push(`${t('csvLng')},${lastLon.toFixed(4)}E`);
+    lines.push(`${t('csvMesh')},${lastResults.TTL.mesh}`);
+    lines.push(`${t('csvVersion')},${VERSION} / AVR / T50`);
+    return lines;
+}
+
+function triggerDownload(filename, csvText) {
+    const blob = new Blob([buildBOM() + csvText], { type: 'text/csv;charset=utf-8;' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = filename;
+    a.click();
+    URL.revokeObjectURL(a.href);
+}
+
+function downloadRawCSV() {
+    if (!lastResults) return;
+    const R = lastResults;
+    const lines = [];
+    lines.push(t('csvHeaderRaw'));
+    lines.push(...csvMeta());
+    lines.push('');
+
+    // Build unified PBV column from TTL (longest)
+    const pbvAll = R.TTL.sim.map(v => parseFloat(v));
+
+    // Header row
+    lines.push([
+        t('csvColPBV'),
+        t('csvColTTL'),
+        t('csvColCAT1'),
+        t('csvColCAT2'),
+        t('csvColCAT3'),
+        t('csvColCAT12')
+    ].join(','));
+
+    // Data rows - align by PBV value
+    const probMap = {};
+    for (const key of ['TTL', 'CAT1', 'CAT2', 'CAT3', 'CAT12']) {
+        probMap[key] = {};
+        for (let i = 0; i < R[key].sim.length; i++) {
+            probMap[key][R[key].sim[i]] = R[key].prob[i];
+        }
     }
 
-    function ds(label, data, colorKey, width) {
-        return {
-            label,
-            data,
-            borderColor: CHART_COLORS[colorKey].border,
-            backgroundColor: CHART_COLORS[colorKey].bg,
-            borderWidth: width || 2,
-            showLine: true,
-            pointRadius: 0,
-            pointHoverRadius: 4,
-            tension: 0.3
-        };
+    for (const pbv of pbvAll) {
+        const row = [pbv];
+        for (const key of ['TTL', 'CAT1', 'CAT2', 'CAT3', 'CAT12']) {
+            row.push(probMap[key][String(pbv)] || '');
+        }
+        lines.push(row.join(','));
     }
 
-    function renderCharts(R) {
-        // Show canvases, hide placeholders
-        document.getElementById('placeholderCat').style.display = 'none';
-        document.getElementById('placeholderType').style.display = 'none';
-        document.getElementById('chartCategories').style.display = 'block';
-        document.getElementById('chartTypes').style.display = 'block';
+    const mesh = R.TTL.mesh;
+    triggerDownload(`hazard_raw_${mesh}.csv`, lines.join('\n'));
+}
 
-        // Destroy previous charts
-        if (chartCat)  { chartCat.destroy();  chartCat = null; }
-        if (chartType) { chartType.destroy(); chartType = null; }
+function downloadCalcCSV() {
+    if (!lastResults) return;
+    const R = lastResults;
+    const lines = [];
+    lines.push(t('csvHeaderCalc'));
+    lines.push(...csvMeta());
+    lines.push('');
 
-        // ----- Chart 1: Category breakdown (like Figure 1.1) -----
-        const dsCat = [
-            ds('全ての地震',                     toXY(R.TTL.sim,  R.TTL.prob),  'TTL',  2.5),
-            ds('カテゴリーI（海溝型・特定）',     toXY(R.CAT1.sim, R.CAT1.prob), 'CAT1', 2),
-            ds('カテゴリーII（海溝型・非特定）',  toXY(R.CAT2.sim, R.CAT2.prob), 'CAT2', 2),
-            ds('カテゴリーIII（直下型）',         toXY(R.CAT3.sim, R.CAT3.prob), 'CAT3', 2)
+    lines.push([t('csvColPBV'), t('csvColSub'), t('csvColCru')].join(','));
+
+    // Use TTL PBV as reference
+    const pbvAll = R.TTL.sim.map(v => parseFloat(v));
+    const subMap = {};
+    for (let i = 0; i < R.CAT12.sim.length; i++) {
+        subMap[R.CAT12.sim[i]] = R.CAT12.prob[i];
+    }
+    const cruMap = {};
+    for (let i = 0; i < R.CAT3.sim.length; i++) {
+        cruMap[R.CAT3.sim[i]] = R.CAT3.prob[i];
+    }
+
+    for (const pbv of pbvAll) {
+        const row = [
+            pbv,
+            subMap[String(pbv)] || '',
+            cruMap[String(pbv)] || ''
         ];
-        const cfg1 = makeChartConfig(dsCat, 150);
-        chartCat = new Chart(
-            document.getElementById('chartCategories').getContext('2d'),
-            cfg1
-        );
-
-        // ----- Chart 2: Subduction vs Crustal (like Figure 1.2) -----
-        const dsType = [
-            ds('海溝型地震（カテゴリーI+II）', toXY(R.CAT12.sim, R.CAT12.prob), 'CAT12', 2.5),
-            ds('直下型地震（カテゴリーIII）',   toXY(R.CAT3.sim,  R.CAT3.prob),  'TTL',   2.5)
-        ];
-        const cfg2 = makeChartConfig(dsType, 100);
-        chartType = new Chart(
-            document.getElementById('chartTypes').getContext('2d'),
-            cfg2
-        );
+        lines.push(row.join(','));
     }
 
-    // ========== Event Handlers ==========
-    map.on('click', function(e) {
-        const lat = e.latlng.lat;
-        const lng = e.latlng.lng;
+    const mesh = R.TTL.mesh;
+    triggerDownload(`hazard_calc_${mesh}.csv`, lines.join('\n'));
+}
 
-        // Validate within Japan area
-        if (lat < 20 || lat > 47 || lng < 122 || lng > 154) {
-            setStatus('日本国内の地点を選択してください（緯度20-47°、経度122-154°）', 'error');
-            return;
-        }
+// ================================================================
+//  Map Event Handlers
+// ================================================================
+map.on('click', function(e) {
+    const lat = e.latlng.lat;
+    const lng = e.latlng.lng;
 
-        // Place / move marker
-        if (marker) {
-            marker.setLatLng([lat, lng]);
-        } else {
-            marker = L.marker([lat, lng]).addTo(map);
-        }
-        marker.bindPopup(
-            `<b>選択地点</b><br>緯度: ${lat.toFixed(4)}°N<br>経度: ${lng.toFixed(4)}°E`
-        ).openPopup();
-
-        fetchHazardCurves(lat, lng);
-    });
-
-    function fetchFromInput() {
-        const lat = parseFloat(document.getElementById('inputLat').value);
-        const lng = parseFloat(document.getElementById('inputLng').value);
-
-        if (isNaN(lat) || isNaN(lng)) {
-            setStatus('緯度・経度を正しく入力してください。', 'error');
-            return;
-        }
-        if (lat < 20 || lat > 47 || lng < 122 || lng > 154) {
-            setStatus('日本国内の座標を入力してください（緯度20-47°、経度122-154°）', 'error');
-            return;
-        }
-
-        // Move map and place marker
-        map.setView([lat, lng], Math.max(map.getZoom(), 8));
-        if (marker) {
-            marker.setLatLng([lat, lng]);
-        } else {
-            marker = L.marker([lat, lng]).addTo(map);
-        }
-        marker.bindPopup(
-            `<b>選択地点</b><br>緯度: ${lat.toFixed(4)}°N<br>経度: ${lng.toFixed(4)}°E`
-        ).openPopup();
-
-        fetchHazardCurves(lat, lng);
+    if (lat < 20 || lat > 47 || lng < 122 || lng > 154) {
+        setStatus(t('statusErrorRange'), 'error');
+        return;
     }
 
-    // Enter key in input fields
-    document.getElementById('inputLat').addEventListener('keydown', function(e) {
-        if (e.key === 'Enter') fetchFromInput();
-    });
-    document.getElementById('inputLng').addEventListener('keydown', function(e) {
-        if (e.key === 'Enter') fetchFromInput();
-    });
-    </script>
+    if (marker) {
+        marker.setLatLng([lat, lng]);
+    } else {
+        marker = L.marker([lat, lng]).addTo(map);
+    }
+    marker.bindPopup(
+        `<b>${t('popupTitle')}</b><br>${t('popupLat')}: ${lat.toFixed(4)}°N<br>${t('popupLng')}: ${lng.toFixed(4)}°E`
+    ).openPopup();
+
+    fetchHazardCurves(lat, lng);
+});
+
+function fetchFromInput() {
+    const lat = parseFloat(document.getElementById('inputLat').value);
+    const lng = parseFloat(document.getElementById('inputLng').value);
+
+    if (isNaN(lat) || isNaN(lng)) {
+        setStatus(t('statusErrorInput'), 'error');
+        return;
+    }
+    if (lat < 20 || lat > 47 || lng < 122 || lng > 154) {
+        setStatus(t('statusErrorRange'), 'error');
+        return;
+    }
+
+    map.setView([lat, lng], Math.max(map.getZoom(), 8));
+    if (marker) {
+        marker.setLatLng([lat, lng]);
+    } else {
+        marker = L.marker([lat, lng]).addTo(map);
+    }
+    marker.bindPopup(
+        `<b>${t('popupTitle')}</b><br>${t('popupLat')}: ${lat.toFixed(4)}°N<br>${t('popupLng')}: ${lng.toFixed(4)}°E`
+    ).openPopup();
+
+    fetchHazardCurves(lat, lng);
+}
+
+document.getElementById('inputLat').addEventListener('keydown', function(e) {
+    if (e.key === 'Enter') fetchFromInput();
+});
+document.getElementById('inputLng').addEventListener('keydown', function(e) {
+    if (e.key === 'Enter') fetchFromInput();
+});
+
+// ================================================================
+//  Init: respect OS preference for dark mode
+// ================================================================
+if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+    isDark = true;
+    applyTheme();
+}
+</script>
 </body>
 </html>
