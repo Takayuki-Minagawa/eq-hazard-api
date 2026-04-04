@@ -138,6 +138,17 @@
                 </div>
                 <button class="btn" id="btnFetch" onclick="fetchFromInput()" data-i18n="btnFetch">取得</button>
             </div>
+            <div class="coord-inputs" style="margin-bottom:12px;">
+                <div style="grid-column:1/3">
+                    <label for="selectParams" data-i18n="labelParams">評価期間・ケース</label>
+                    <select id="selectParams" style="width:100%;padding:7px 10px;border:1px solid var(--border-input);border-radius:4px;font-size:.9rem;background:var(--bg-input);color:var(--text-primary);">
+                        <option value="AVR_T50" data-i18n-opt="optAvrT50">50年・平均ケース</option>
+                        <option value="MAX_T50" data-i18n-opt="optMaxT50">50年・最大ケース</option>
+                        <option value="AVR_T30" data-i18n-opt="optAvrT30">30年・平均ケース</option>
+                        <option value="MAX_T30" data-i18n-opt="optMaxT30">30年・最大ケース</option>
+                    </select>
+                </div>
+            </div>
             <table class="info-table">
                 <tr><th data-i18n="thLat">選択緯度</th><td id="dispLat">-</td></tr>
                 <tr><th data-i18n="thLng">選択経度</th><td id="dispLng">-</td></tr>
@@ -181,13 +192,10 @@
                 </div>
                 <!-- Exceedance Level Intensity -->
                 <div>
-                    <h3 data-i18n="returnTitle">超過確率別 計測震度（50年）</h3>
+                    <h3 id="returnTitleEl" data-i18n="returnTitle">超過確率別 計測震度</h3>
                     <div id="returnPlaceholder" class="site-placeholder" data-i18n="sitePlaceholder">地点を選択すると表示されます</div>
                     <table class="info-table" id="returnTable" style="display:none;">
-                        <tr><th data-i18n="rpP39">39%（≒100年再現）</th><td id="dispP39" class="intensity-val">-</td></tr>
-                        <tr><th data-i18n="rpP10">10%（≒475年再現）</th><td id="dispP10" class="intensity-val">-</td></tr>
-                        <tr><th data-i18n="rpP05">5%（≒975年再現）</th><td id="dispP05" class="intensity-val">-</td></tr>
-                        <tr><th data-i18n="rpP02">2%（≒2,475年再現）</th><td id="dispP02" class="intensity-val">-</td></tr>
+                        <tbody id="returnTableBody"></tbody>
                     </table>
                 </div>
                 <!-- Hazard Summary -->
@@ -291,11 +299,12 @@ ja: {
     csvColSub:'海溝型地震(I+II)',csvColCru:'直下型地震(III)',
     fetching:'取得中...',
     // Site
-    siteTitle:'地盤・サイト評価情報',groundTitle:'表層地盤情報',returnTitle:'超過確率別 計測震度（50年）',
+    siteTitle:'地盤・サイト評価情報',groundTitle:'表層地盤情報',returnTitle:'超過確率別 計測震度',
     probTitle:'超過確率（30年・全地震）',sitePlaceholder:'地点を選択すると表示されます',
     thARV:'地盤増幅率 (ARV)',thTopo:'微地形区分',thLandslide:'地すべり地形',
     landslideYes:'該当あり',landslideNo:'該当なし',
-    rpP39:'39%（≒100年再現）',rpP10:'10%（≒475年再現）',rpP05:'5%（≒975年再現）',rpP02:'2%（≒2,475年再現）',
+    labelParams:'評価期間・ケース',
+    optAvrT50:'50年・平均ケース',optMaxT50:'50年・最大ケース',optAvrT30:'30年・平均ケース',optMaxT30:'30年・最大ケース',
     pI45:'震度5弱以上',pI50:'震度5強以上',pI55:'震度6弱以上',pI60:'震度6強以上',
     // Fault
     faultTitle:'影響断層一覧（被害地震検索）',faultPlaceholder:'地点を選択すると、当該地点に影響する断層の一覧が表示されます',
@@ -338,11 +347,12 @@ en: {
     csvColCAT2:'CategoryII(PSE_MTTL)',csvColCAT3:'CategoryIII(LND_MTTL)',csvColCAT12:'CategoryI+II(PPE_MTTL)',
     csvColSub:'Subduction(I+II)',csvColCru:'Crustal(III)',
     fetching:'Fetching...',
-    siteTitle:'Ground / Site Assessment',groundTitle:'Surface Ground Information',returnTitle:'Intensity by Exceedance Prob. (50yr)',
+    siteTitle:'Ground / Site Assessment',groundTitle:'Surface Ground Information',returnTitle:'Intensity by Exceedance Prob.',
     probTitle:'Exceedance Probability (30yr, All EQ)',sitePlaceholder:'Select a location to display',
     thARV:'Amplification Factor (ARV)',thTopo:'Microtopography',thLandslide:'Landslide Topography',
     landslideYes:'Detected',landslideNo:'Not detected',
-    rpP39:'39% (≒100yr return)',rpP10:'10% (≒475yr return)',rpP05:'5% (≒975yr return)',rpP02:'2% (≒2,475yr return)',
+    labelParams:'Period / Case',
+    optAvrT50:'50yr / Average',optMaxT50:'50yr / Maximum',optAvrT30:'30yr / Average',optMaxT30:'30yr / Maximum',
     pI45:'JMA 5-lower+',pI50:'JMA 5-upper+',pI55:'JMA 6-lower+',pI60:'JMA 6-upper+',
     faultTitle:'Affecting Fault List (Damage Earthquake Search)',faultPlaceholder:'Select a location to display the list of faults affecting the site',
     fthRank:'#',fthName:'Fault Name',fthType:'Type',fthProb:'Probability',fthMag:'Mw',fthInt:'JMA Int.',
@@ -376,6 +386,11 @@ function applyLang(){
         if(I18N[currentLang][k]!==undefined) el.textContent=I18N[currentLang][k];
     });
     document.getElementById('btnLang').textContent=currentLang==='ja'?'EN':'JA';
+    // Update select options text
+    document.querySelectorAll('[data-i18n-opt]').forEach(el=>{
+        const k=el.getAttribute('data-i18n-opt');
+        if(I18N[currentLang][k]!==undefined) el.textContent=I18N[currentLang][k];
+    });
     if(lastResults) renderCharts(lastResults);
     if(lastGround) renderGround(lastGround,lastLandslide);
     if(lastReturn) renderReturn(lastReturn);
@@ -397,14 +412,16 @@ function toggleTheme(){isDark=!isDark;applyTheme()}
 //  Config
 // ================================================================
 const API_MAP='https://www.j-shis.bosai.go.jp/map/api';
-const VER='Y2024',CASE='AVR',PER='T50';
+const VER='Y2024';
+let curCase='AVR',curPer='T50';
 const EQ_CODES={TTL:'TTL_MTTL',CAT1:'PLE_MTTL',CAT2:'PSE_MTTL',CAT3:'LND_MTTL',CAT12:'PPE_MTTL'};
 
-function hzcvUrl(eq,lon,lat){return `${API_MAP}/pshm/${VER}/${CASE}/${eq}/${PER}/hzcv.json?position=${lon},${lat}&epsg=4326`}
+function getParams(){const v=document.getElementById('selectParams').value;const[c,p]=v.split('_');curCase=c;curPer=p}
+function hzcvUrl(eq,lon,lat){return `${API_MAP}/pshm/${VER}/${curCase}/${eq}/${curPer}/hzcv.json?position=${lon},${lat}&epsg=4326`}
 function sstrctUrl(lon,lat){return `${API_MAP}/sstrct/V4/meshinfo.geojson?position=${lon},${lat}&epsg=4326`}
 function landslideUrl(lon,lat){return `${API_MAP}/landslide/isContaining.json?position=${lon},${lat}&epsg=4326`}
-function fltsearchUrl(lon,lat){return `${API_MAP}/fltsearch?position=${lon},${lat}&epsg=4326&mode=C&version=${VER}&case=${CASE}&period=P_T50&format=json`}
-function meshInfoUrl(lon,lat){return `${API_MAP}/pshm/${VER}/${CASE}/TTL_MTTL/meshinfo.geojson?position=${lon},${lat}&epsg=4326`}
+function fltsearchUrl(lon,lat){return `${API_MAP}/fltsearch?position=${lon},${lat}&epsg=4326&mode=C&version=${VER}&case=${curCase}&period=P_${curPer}&format=json`}
+function meshInfoUrl(lon,lat){return `${API_MAP}/pshm/${VER}/${curCase}/TTL_MTTL/meshinfo.geojson?position=${lon},${lat}&epsg=4326`}
 
 // ================================================================
 //  Map
@@ -438,6 +455,7 @@ function pct(v){const n=parseFloat(v);return isNaN(n)?'-':(n*100).toFixed(1)+'%'
 // ================================================================
 async function fetchAllData(lat,lon){
     if(isFetching) return;
+    getParams();
     showLoading(true);
     setStatus(t('statusLoading'),'loading');
     lastLat=lat;lastLon=lon;
@@ -445,7 +463,7 @@ async function fetchAllData(lat,lon){
     document.getElementById('dispLat').textContent=lat.toFixed(4)+'°N';
     document.getElementById('dispLng').textContent=lon.toFixed(4)+'°E';
     document.getElementById('dispMesh').textContent=t('fetching');
-    document.getElementById('dispVersion').textContent=VER;
+    document.getElementById('dispVersion').textContent=`${VER} / ${curCase} / ${curPer}`;
     document.getElementById('inputLat').value=lat.toFixed(4);
     document.getElementById('inputLng').value=lon.toFixed(4);
 
@@ -532,13 +550,30 @@ function renderGround(g,ls){
 // ================================================================
 //  Render: Return Period
 // ================================================================
+const RETURN_KEYS={
+    T50:[
+        {k:'T50_P39_SI',ja:'39%（≒100年再現）',en:'39% (≒100yr)'},
+        {k:'T50_P10_SI',ja:'10%（≒475年再現）',en:'10% (≒475yr)'},
+        {k:'T50_P05_SI',ja:'5%（≒975年再現）',en:'5% (≒975yr)'},
+        {k:'T50_P02_SI',ja:'2%（≒2,475年再現）',en:'2% (≒2,475yr)'}
+    ],
+    T30:[
+        {k:'T30_P06_SI',ja:'6%（≒485年再現）',en:'6% (≒485yr)'},
+        {k:'T30_P03_SI',ja:'3%（≒985年再現）',en:'3% (≒985yr)'}
+    ]
+};
 function renderReturn(p){
-    if(!p){document.getElementById('returnTable').style.display='none';document.getElementById('returnPlaceholder').style.display='';return}
+    const tbody=document.getElementById('returnTableBody');
+    if(!p){document.getElementById('returnTable').style.display='none';document.getElementById('returnPlaceholder').style.display='';tbody.innerHTML='';return}
     document.getElementById('returnPlaceholder').style.display='none';
     document.getElementById('returnTable').style.display='';
-    const map={T50_P39_SI:'dispP39',T50_P10_SI:'dispP10',T50_P05_SI:'dispP05',T50_P02_SI:'dispP02'};
-    for(const[k,id]of Object.entries(map)){
-        const v=p[k];document.getElementById(id).textContent=v?parseFloat(v).toFixed(1):'-';
+    tbody.innerHTML='';
+    const items=RETURN_KEYS[curPer]||RETURN_KEYS.T50;
+    for(const item of items){
+        const v=p[item.k];
+        const tr=document.createElement('tr');
+        tr.innerHTML=`<th>${currentLang==='ja'?item.ja:item.en}</th><td class="intensity-val">${v?parseFloat(v).toFixed(1):'-'}</td>`;
+        tbody.appendChild(tr);
     }
 }
 
@@ -653,10 +688,10 @@ function downloadSiteCSV(){
     }
     // Exceedance probability intensity
     if(lastReturn){
-        lines.push(`[${t('returnTitle')}]`);
+        lines.push(`[${t('returnTitle')} (${curPer}/${curCase})]`);
         lines.push(`${t('csvReturnPeriod')},${t('csvIntensity')}`);
-        const rp={T50_P39_SI:'39%(≒100yr)',T50_P10_SI:'10%(≒475yr)',T50_P05_SI:'5%(≒975yr)',T50_P02_SI:'2%(≒2475yr)'};
-        for(const[k,label]of Object.entries(rp))lines.push(`${label},${lastReturn[k]||''}`);
+        const items=RETURN_KEYS[curPer]||RETURN_KEYS.T50;
+        for(const item of items)lines.push(`${currentLang==='ja'?item.ja:item.en},${lastReturn[item.k]||''}`);
         lines.push('');
     }
     // Faults
@@ -693,6 +728,7 @@ function fetchFromInput(){
 }
 document.getElementById('inputLat').addEventListener('keydown',e=>{if(e.key==='Enter')fetchFromInput()});
 document.getElementById('inputLng').addEventListener('keydown',e=>{if(e.key==='Enter')fetchFromInput()});
+document.getElementById('selectParams').addEventListener('change',()=>{if(lastLat!==null&&lastLon!==null)fetchAllData(lastLat,lastLon)});
 
 // ================================================================
 //  Init
