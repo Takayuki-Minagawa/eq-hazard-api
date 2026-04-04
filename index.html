@@ -212,30 +212,15 @@
             </div>
         </div>
 
-        <!-- Charts -->
+        <!-- Chart -->
         <div class="panel chart-panel">
             <h2 data-i18n="chartMainTitle">ハザードカーブ</h2>
-            <div class="charts-row">
-                <div class="chart-wrapper">
-                    <h3 data-i18n="chartCatTitle">カテゴリ別ハザードカーブ</h3>
-                    <div style="position:relative;">
-                        <div class="chart-container">
-                            <div class="chart-placeholder" id="placeholderCat" data-i18n="chartPlaceholder">地点を選択するとハザードカーブが表示されます</div>
-                            <canvas id="chartCategories" style="display:none;"></canvas>
-                        </div>
-                        <div class="loading-overlay" id="loadingCat"><div class="spinner"></div></div>
-                    </div>
+            <div style="position:relative;">
+                <div class="chart-container" style="height:480px;">
+                    <div class="chart-placeholder" id="placeholderChart" data-i18n="chartPlaceholder">地点を選択するとハザードカーブが表示されます</div>
+                    <canvas id="chartMain" style="display:none;"></canvas>
                 </div>
-                <div class="chart-wrapper">
-                    <h3 data-i18n="chartTypeTitle">地震タイプ別ハザードカーブ（海溝型 vs 直下型）</h3>
-                    <div style="position:relative;">
-                        <div class="chart-container">
-                            <div class="chart-placeholder" id="placeholderType" data-i18n="chartPlaceholder">地点を選択するとハザードカーブが表示されます</div>
-                            <canvas id="chartTypes" style="display:none;"></canvas>
-                        </div>
-                        <div class="loading-overlay" id="loadingType"><div class="spinner"></div></div>
-                    </div>
-                </div>
+                <div class="loading-overlay" id="loadingChart"><div class="spinner"></div></div>
             </div>
         </div>
 
@@ -284,18 +269,15 @@ ja: {
     noteSource:'データ出典:',noteOrg:'（防災科学技術研究所）',
     noteSpec:'バージョン: Y2024 / 平均ケース(AVR) / 50年超過確率(T50)',
     noteMetric:'地震動指標: 工学的基盤最大速度 PBV [cm/s]',
-    chartMainTitle:'ハザードカーブ',chartCatTitle:'カテゴリ別ハザードカーブ',
-    chartTypeTitle:'地震タイプ別ハザードカーブ（海溝型 vs 直下型）',
+    chartMainTitle:'ハザードカーブ（海溝型 vs 直下型）',
     chartPlaceholder:'地点を選択するとハザードカーブが表示されます',
     xAxisLabel:'工学的基盤最大速度 PBV [cm/s]',yAxisLabel:'超過確率',
-    lblTTL:'全ての地震',lblCAT1:'カテゴリーI（海溝型・特定）',lblCAT2:'カテゴリーII（海溝型・非特定）',
-    lblCAT3:'カテゴリーIII（直下型）',lblCAT12:'海溝型地震（カテゴリーI+II）',lblCAT3b:'直下型地震（カテゴリーIII）',
+    lblTTL:'全ての地震',lblCAT12:'海溝型地震（カテゴリーI+II）',lblCAT3b:'直下型地震（カテゴリーIII）',
     tooltipPBV:'PBV',tooltipProb:'超過確率',
     popupTitle:'選択地点',popupLat:'緯度',popupLng:'経度',
     csvHeaderRaw:'地震ハザードカーブ 取得データ（APIレスポンス）',csvHeaderCalc:'地震ハザードカーブ 算定データ（海溝型・直下型）',
     csvLat:'緯度',csvLng:'経度',csvMesh:'メッシュコード',csvVersion:'バージョン',
-    csvColPBV:'PBV[cm/s]',csvColTTL:'全地震(TTL_MTTL)',csvColCAT1:'カテゴリーI(PLE_MTTL)',
-    csvColCAT2:'カテゴリーII(PSE_MTTL)',csvColCAT3:'カテゴリーIII(LND_MTTL)',csvColCAT12:'カテゴリーI+II(PPE_MTTL)',
+    csvColPBV:'PBV[cm/s]',csvColTTL:'全地震(TTL_MTTL)',csvColCAT3:'直下型(LND_MTTL)',csvColCAT12:'海溝型I+II(PPE_MTTL)',
     csvColSub:'海溝型地震(I+II)',csvColCru:'直下型地震(III)',
     fetching:'取得中...',
     // Site
@@ -333,18 +315,15 @@ en: {
     noteSource:'Data source:',noteOrg:' (NIED)',
     noteSpec:'Version: Y2024 / Average(AVR) / 50-year exceedance(T50)',
     noteMetric:'Metric: Peak Bedrock Velocity PBV [cm/s]',
-    chartMainTitle:'Hazard Curves',chartCatTitle:'Hazard Curves by Category',
-    chartTypeTitle:'Hazard Curves by Earthquake Type (Subduction vs Crustal)',
+    chartMainTitle:'Hazard Curves (Subduction vs Crustal)',
     chartPlaceholder:'Select a location to display hazard curves',
     xAxisLabel:'Peak Bedrock Velocity PBV [cm/s]',yAxisLabel:'Exceedance Probability',
-    lblTTL:'All Earthquakes',lblCAT1:'Category I (Subduction, specified)',lblCAT2:'Category II (Subduction, unspecified)',
-    lblCAT3:'Category III (Crustal)',lblCAT12:'Subduction (Category I+II)',lblCAT3b:'Crustal (Category III)',
+    lblTTL:'All Earthquakes',lblCAT12:'Subduction (Category I+II)',lblCAT3b:'Crustal (Category III)',
     tooltipPBV:'PBV',tooltipProb:'Exc. Prob.',
     popupTitle:'Selected Location',popupLat:'Lat',popupLng:'Lon',
     csvHeaderRaw:'Seismic Hazard Curve - Raw API Data',csvHeaderCalc:'Seismic Hazard Curve - Calculated Data (Subduction / Crustal)',
     csvLat:'Latitude',csvLng:'Longitude',csvMesh:'Mesh Code',csvVersion:'Version',
-    csvColPBV:'PBV[cm/s]',csvColTTL:'All(TTL_MTTL)',csvColCAT1:'CategoryI(PLE_MTTL)',
-    csvColCAT2:'CategoryII(PSE_MTTL)',csvColCAT3:'CategoryIII(LND_MTTL)',csvColCAT12:'CategoryI+II(PPE_MTTL)',
+    csvColPBV:'PBV[cm/s]',csvColTTL:'All(TTL_MTTL)',csvColCAT3:'Crustal(LND_MTTL)',csvColCAT12:'Subduction I+II(PPE_MTTL)',
     csvColSub:'Subduction(I+II)',csvColCru:'Crustal(III)',
     fetching:'Fetching...',
     siteTitle:'Ground / Site Assessment',groundTitle:'Surface Ground Information',returnTitle:'Intensity by Exceedance Prob.',
@@ -370,7 +349,7 @@ en: {
 // ================================================================
 let currentLang='ja',isDark=false,lastResults=null,lastLat=null,lastLon=null;
 let lastGround=null,lastReturn=null,lastLandslide=null,lastFaults=null,lastMeshInfo=null;
-let marker=null,chartCat=null,chartType=null,isFetching=false;
+let marker=null,chartMain=null,isFetching=false;
 
 function t(k){return I18N[currentLang][k]||k}
 
@@ -412,9 +391,9 @@ function toggleTheme(){isDark=!isDark;applyTheme()}
 //  Config
 // ================================================================
 const API_MAP='https://www.j-shis.bosai.go.jp/map/api';
-const VER='Y2024';
+let VER='Y2024';
 let curCase='AVR',curPer='T50';
-const EQ_CODES={TTL:'TTL_MTTL',CAT1:'PLE_MTTL',CAT2:'PSE_MTTL',CAT3:'LND_MTTL',CAT12:'PPE_MTTL'};
+const EQ_CODES={TTL:'TTL_MTTL',CAT3:'LND_MTTL',CAT12:'PPE_MTTL'};
 
 function getParams(){const v=document.getElementById('selectParams').value;const[c,p]=v.split('_');curCase=c;curPer=p}
 function hzcvUrl(eq,lon,lat){return `${API_MAP}/pshm/${VER}/${curCase}/${eq}/${curPer}/hzcv.json?position=${lon},${lat}&epsg=4326`}
@@ -437,8 +416,7 @@ L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{
 function setStatus(msg,type){const el=document.getElementById('status');el.textContent=msg;el.className='status-'+type}
 function showLoading(show){
     const m=show?'add':'remove';
-    document.getElementById('loadingCat').classList[m]('active');
-    document.getElementById('loadingType').classList[m]('active');
+    document.getElementById('loadingChart').classList[m]('active');
     document.getElementById('btnFetch').disabled=show;
     isFetching=show;
 }
@@ -638,14 +616,15 @@ function makeChartCfg(datasets,xMax){
 function ds(label,data,ck,w){return{label,data,borderColor:clr(ck),borderWidth:w||2,showLine:true,pointRadius:0,pointHoverRadius:4,tension:.3}}
 function safeDS(label,r,ck,w){return r?ds(label,toXY(r.sim,r.prob),ck,w):null}
 function renderCharts(R){
-    document.getElementById('placeholderCat').style.display='none';document.getElementById('placeholderType').style.display='none';
-    document.getElementById('chartCategories').style.display='block';document.getElementById('chartTypes').style.display='block';
-    if(chartCat){chartCat.destroy();chartCat=null}if(chartType){chartType.destroy();chartType=null}
-    const dsCat=[safeDS(t('lblTTL'),R.TTL,'TTL',2.5),safeDS(t('lblCAT1'),R.CAT1,'CAT1',2),
-        safeDS(t('lblCAT2'),R.CAT2,'CAT2',2),safeDS(t('lblCAT3'),R.CAT3,'CAT3',2)].filter(Boolean);
-    chartCat=new Chart(document.getElementById('chartCategories').getContext('2d'),makeChartCfg(dsCat,150));
-    const dsType=[safeDS(t('lblCAT12'),R.CAT12,'CAT12',2.5),safeDS(t('lblCAT3b'),R.CAT3,'TTL',2.5)].filter(Boolean);
-    chartType=new Chart(document.getElementById('chartTypes').getContext('2d'),makeChartCfg(dsType,150));
+    document.getElementById('placeholderChart').style.display='none';
+    document.getElementById('chartMain').style.display='block';
+    if(chartMain){chartMain.destroy();chartMain=null}
+    const datasets=[
+        safeDS(t('lblTTL'),R.TTL,'TTL',2.5),
+        safeDS(t('lblCAT12'),R.CAT12,'CAT12',2.5),
+        safeDS(t('lblCAT3b'),R.CAT3,'CAT3',2.5)
+    ].filter(Boolean);
+    chartMain=new Chart(document.getElementById('chartMain').getContext('2d'),makeChartCfg(datasets,150));
 }
 
 // ================================================================
@@ -744,6 +723,20 @@ document.getElementById('selectParams').addEventListener('change',()=>{if(lastLa
 //  Init
 // ================================================================
 if(window.matchMedia&&window.matchMedia('(prefers-color-scheme:dark)').matches){isDark=true;applyTheme()}
+
+// Auto-detect latest J-SHIS version
+(async function detectVersion(){
+    const thisYear=new Date().getFullYear();
+    for(let y=thisYear;y>=2020;y--){
+        const v=`Y${y}`;
+        try{
+            const r=await fetch(`${API_MAP}/pshm/${v}/AVR/TTL_MTTL/T50/hzcv.json?position=139.7,35.7&epsg=4326`);
+            if(!r.ok)continue;
+            const d=await r.json();
+            if(d.status==='Success'){VER=v;console.log('J-SHIS version:',v);return}
+        }catch(e){}
+    }
+})()
 </script>
 </body>
 </html>
