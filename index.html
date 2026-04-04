@@ -194,7 +194,7 @@
                 </div>
                 <!-- Hazard Summary -->
                 <div>
-                    <h3 data-i18n="probTitle">超過確率（50年・全地震）</h3>
+                    <h3 data-i18n="probTitle">超過確率（30年・全地震）</h3>
                     <div id="probPlaceholder" class="site-placeholder" data-i18n="sitePlaceholder">地点を選択すると表示されます</div>
                     <table class="info-table" id="probTable" style="display:none;">
                         <tr><th data-i18n="pI45">震度5弱以上</th><td id="dispI45" class="intensity-val">-</td></tr>
@@ -294,7 +294,7 @@ ja: {
     fetching:'取得中...',
     // Site
     siteTitle:'地盤・サイト評価情報',groundTitle:'表層地盤情報',returnTitle:'再現期間別 計測震度',
-    probTitle:'超過確率（50年・全地震）',sitePlaceholder:'地点を選択すると表示されます',
+    probTitle:'超過確率（30年・全地震）',sitePlaceholder:'地点を選択すると表示されます',
     thARV:'地盤増幅率 (ARV)',thTopo:'微地形区分',thLandslide:'地すべり地形',
     landslideYes:'該当あり',landslideNo:'該当なし',
     rp500:'500 年',rp1000:'1,000 年',rp5000:'5,000 年',rp10k:'10,000 年',rp50k:'50,000 年',rp100k:'100,000 年',
@@ -341,7 +341,7 @@ en: {
     csvColSub:'Subduction(I+II)',csvColCru:'Crustal(III)',
     fetching:'Fetching...',
     siteTitle:'Ground / Site Assessment',groundTitle:'Surface Ground Information',returnTitle:'Return Period Intensity',
-    probTitle:'Exceedance Probability (50yr, All EQ)',sitePlaceholder:'Select a location to display',
+    probTitle:'Exceedance Probability (30yr, All EQ)',sitePlaceholder:'Select a location to display',
     thARV:'Amplification Factor (ARV)',thTopo:'Microtopography',thLandslide:'Landslide Topography',
     landslideYes:'Detected',landslideNo:'Not detected',
     rp500:'500 yr',rp1000:'1,000 yr',rp5000:'5,000 yr',rp10k:'10,000 yr',rp50k:'50,000 yr',rp100k:'100,000 yr',
@@ -380,6 +380,7 @@ function applyLang(){
     document.getElementById('btnLang').textContent=currentLang==='ja'?'EN':'JA';
     if(lastResults) renderCharts(lastResults);
     if(lastGround) renderGround(lastGround,lastLandslide);
+    if(lastReturn) renderReturn(lastReturn);
     if(lastFaults) renderFaults(lastFaults);
 }
 function toggleLang(){currentLang=currentLang==='ja'?'en':'ja';applyLang()}
@@ -433,6 +434,17 @@ function toXY(sim,prob){
     return pts;
 }
 function pct(v){const n=parseFloat(v);return isNaN(n)?'-':(n*100).toFixed(1)+'%'}
+function jmaLabel(v){
+    if(!v||v==='-')return'-';
+    const m=currentLang==='ja'?{
+        '0':'震度0','1':'震度1','2':'震度2','3':'震度3','4':'震度4',
+        '5L':'震度5弱','5U':'震度5強','6L':'震度6弱','6U':'震度6強','7':'震度7'
+    }:{
+        '0':'JMA 0','1':'JMA 1','2':'JMA 2','3':'JMA 3','4':'JMA 4',
+        '5L':'JMA 5-lower','5U':'JMA 5-upper','6L':'JMA 6-lower','6U':'JMA 6-upper','7':'JMA 7'
+    };
+    return m[String(v).trim()]||String(v);
+}
 
 // ================================================================
 //  Fetch all data
@@ -504,7 +516,7 @@ async function fetchAllData(lat,lon){
         // Faults
         if(faultRes.status==='fulfilled'){
             const d=faultRes.value;
-            lastFaults=Array.isArray(d)?d:(d?.data||d?.features||d?.result||[]);
+            lastFaults=d?.Fault||d?.fault||d?.data||d?.features||d?.result||(Array.isArray(d)?d:[]);
             renderFaults(lastFaults);
         }else{lastFaults=[];renderFaults([])}
 
@@ -545,7 +557,7 @@ function renderReturn(p){
     document.getElementById('returnTable').style.display='';
     const map={A0500_SI:'dispA500',A1000_SI:'dispA1000',A5000_SI:'dispA5000',A010K_SI:'dispA10K',A050K_SI:'dispA50K',A100K_SI:'dispA100K'};
     for(const[k,id]of Object.entries(map)){
-        const v=p[k];document.getElementById(id).textContent=v?parseFloat(v).toFixed(1):'-';
+        const v=p[k];document.getElementById(id).textContent=v?jmaLabel(v):'-';
     }
 }
 
@@ -556,7 +568,7 @@ function renderMeshInfo(p){
     if(!p){document.getElementById('probTable').style.display='none';document.getElementById('probPlaceholder').style.display='';return}
     document.getElementById('probPlaceholder').style.display='none';
     document.getElementById('probTable').style.display='';
-    const map={T50_I45_PS:'dispI45',T50_I50_PS:'dispI50',T50_I55_PS:'dispI55',T50_I60_PS:'dispI60'};
+    const map={T30_I45_PS:'dispI45',T30_I50_PS:'dispI50',T30_I55_PS:'dispI55',T30_I60_PS:'dispI60'};
     for(const[k,id]of Object.entries(map)){
         const v=p[k];document.getElementById(id).textContent=v?pct(v):'-';
     }
@@ -654,7 +666,7 @@ function downloadSiteCSV(){
     if(lastMeshInfo){
         lines.push(`[${t('probTitle')}]`);
         lines.push(`${t('csvExcInt')},${t('csvExcProb')}`);
-        const mp={T50_I45_PS:t('pI45'),T50_I50_PS:t('pI50'),T50_I55_PS:t('pI55'),T50_I60_PS:t('pI60')};
+        const mp={T30_I45_PS:t('pI45'),T30_I50_PS:t('pI50'),T30_I55_PS:t('pI55'),T30_I60_PS:t('pI60')};
         for(const[k,label]of Object.entries(mp))lines.push(`${label},${lastMeshInfo[k]||''}`);
         lines.push('');
     }
