@@ -471,15 +471,20 @@ async function fetchAllData(lat,lon){
     const results={};
 
     try{
-        // Hazard curves (critical)
+        // Hazard curves (use allSettled to tolerate individual failures)
         const entries=Object.entries(EQ_CODES);
         const hzcvFetches=entries.map(([k,c])=>
             fetch(hzcvUrl(c,lonS,latS)).then(r=>{if(!r.ok)throw new Error(`HTTP ${r.status}`);return r.json()}).then(j=>{if(j.status!=='Success')throw new Error(j.error?.message||'Error');return{k,j}})
         );
-        const hzcvRes=await Promise.all(hzcvFetches);
-        for(const{k,j}of hzcvRes){results[k]={sim:j.sim.value,prob:j.prob.value,mesh:j.prob.meshcode||j.metaData.meshcode}}
+        const hzcvRes=await Promise.allSettled(hzcvFetches);
+        let hasAny=false;
+        for(const r of hzcvRes){
+            if(r.status==='fulfilled'){const{k,j}=r.value;results[k]={sim:j.sim.value,prob:j.prob.value,mesh:j.prob.meshcode||j.metaData.meshcode};hasAny=true}
+        }
+        if(!hasAny)throw new Error('All hazard curve requests failed');
         lastResults=results;
-        document.getElementById('dispMesh').textContent=results.TTL.mesh;
+        const meshCode=(results.TTL||Object.values(results)[0]).mesh;
+        document.getElementById('dispMesh').textContent=meshCode;
         document.getElementById('downloadSection').classList.add('visible');
         renderCharts(results);
 
@@ -631,43 +636,48 @@ function makeChartCfg(datasets,xMax){
                 ticks:{color:tc,callback:function(v){const l=Math.log10(v);if(Math.abs(l-Math.round(l))<.01)return v>=.01?v.toString():v.toExponential(0);return''},autoSkip:false,maxTicksLimit:10}}}}};
 }
 function ds(label,data,ck,w){return{label,data,borderColor:clr(ck),borderWidth:w||2,showLine:true,pointRadius:0,pointHoverRadius:4,tension:.3}}
+function safeDS(label,r,ck,w){return r?ds(label,toXY(r.sim,r.prob),ck,w):null}
 function renderCharts(R){
     document.getElementById('placeholderCat').style.display='none';document.getElementById('placeholderType').style.display='none';
     document.getElementById('chartCategories').style.display='block';document.getElementById('chartTypes').style.display='block';
     if(chartCat){chartCat.destroy();chartCat=null}if(chartType){chartType.destroy();chartType=null}
-    chartCat=new Chart(document.getElementById('chartCategories').getContext('2d'),makeChartCfg([
-        ds(t('lblTTL'),toXY(R.TTL.sim,R.TTL.prob),'TTL',2.5),ds(t('lblCAT1'),toXY(R.CAT1.sim,R.CAT1.prob),'CAT1',2),
-        ds(t('lblCAT2'),toXY(R.CAT2.sim,R.CAT2.prob),'CAT2',2),ds(t('lblCAT3'),toXY(R.CAT3.sim,R.CAT3.prob),'CAT3',2)],150));
-    chartType=new Chart(document.getElementById('chartTypes').getContext('2d'),makeChartCfg([
-        ds(t('lblCAT12'),toXY(R.CAT12.sim,R.CAT12.prob),'CAT12',2.5),ds(t('lblCAT3b'),toXY(R.CAT3.sim,R.CAT3.prob),'TTL',2.5)],150));
+    const dsCat=[safeDS(t('lblTTL'),R.TTL,'TTL',2.5),safeDS(t('lblCAT1'),R.CAT1,'CAT1',2),
+        safeDS(t('lblCAT2'),R.CAT2,'CAT2',2),safeDS(t('lblCAT3'),R.CAT3,'CAT3',2)].filter(Boolean);
+    chartCat=new Chart(document.getElementById('chartCategories').getContext('2d'),makeChartCfg(dsCat,150));
+    const dsType=[safeDS(t('lblCAT12'),R.CAT12,'CAT12',2.5),safeDS(t('lblCAT3b'),R.CAT3,'TTL',2.5)].filter(Boolean);
+    chartType=new Chart(document.getElementById('chartTypes').getContext('2d'),makeChartCfg(dsType,150));
 }
 
 // ================================================================
 //  CSV
 // ================================================================
 function bom(){return'\uFEFF'}
-function csvMeta(){return[`${t('csvLat')},${lastLat.toFixed(4)}N`,`${t('csvLng')},${lastLon.toFixed(4)}E`,`${t('csvMesh')},${lastResults.TTL.mesh}`,`${t('csvVersion')},${VER} / AVR / T50`]}
+function csvMeta(){const mesh=(lastResults.TTL||Object.values(lastResults)[0]).mesh;return[`${t('csvLat')},${lastLat.toFixed(4)}N`,`${t('csvLng')},${lastLon.toFixed(4)}E`,`${t('csvMesh')},${mesh}`,`${t('csvVersion')},${VER} / ${curCase} / ${curPer}`]}
 function dl(fn,csv){const b=new Blob([bom()+csv],{type:'text/csv;charset=utf-8;'});const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download=fn;a.click();URL.revokeObjectURL(a.href)}
 
 function downloadRawCSV(){
     if(!lastResults)return;const R=lastResults,lines=[t('csvHeaderRaw'),...csvMeta(),''];
-    const pbv=R.TTL.sim.map(v=>parseFloat(v));
-    lines.push([t('csvColPBV'),t('csvColTTL'),t('csvColCAT1'),t('csvColCAT2'),t('csvColCAT3'),t('csvColCAT12')].join(','));
-    const pm={};for(const k of['TTL','CAT1','CAT2','CAT3','CAT12']){pm[k]={};for(let i=0;i<R[k].sim.length;i++)pm[k][R[k].sim[i]]=R[k].prob[i]}
-    for(const v of pbv){const row=[v];for(const k of['TTL','CAT1','CAT2','CAT3','CAT12'])row.push(pm[k][String(v)]||'');lines.push(row.join(','))}
-    dl(`hazard_raw_${R.TTL.mesh}.csv`,lines.join('\n'));
+    const refKey=R.TTL?'TTL':Object.keys(R)[0];
+    const pbv=R[refKey].sim.map(v=>parseFloat(v));
+    const avail=['TTL','CAT1','CAT2','CAT3','CAT12'].filter(k=>R[k]);
+    lines.push([t('csvColPBV'),...avail.map(k=>t('csvCol'+k))].join(','));
+    const pm={};for(const k of avail){pm[k]={};for(let i=0;i<R[k].sim.length;i++)pm[k][R[k].sim[i]]=R[k].prob[i]}
+    for(const v of pbv){const row=[v];for(const k of avail)row.push(pm[k][String(v)]||'');lines.push(row.join(','))}
+    dl(`hazard_raw_${R[refKey].mesh}.csv`,lines.join('\n'));
 }
 function downloadCalcCSV(){
     if(!lastResults)return;const R=lastResults,lines=[t('csvHeaderCalc'),...csvMeta(),''];
+    const refKey=R.TTL?'TTL':(R.CAT12?'CAT12':Object.keys(R)[0]);
     lines.push([t('csvColPBV'),t('csvColSub'),t('csvColCru')].join(','));
-    const pbv=R.TTL.sim.map(v=>parseFloat(v));
-    const sm={},cm={};for(let i=0;i<R.CAT12.sim.length;i++)sm[R.CAT12.sim[i]]=R.CAT12.prob[i];
-    for(let i=0;i<R.CAT3.sim.length;i++)cm[R.CAT3.sim[i]]=R.CAT3.prob[i];
+    const pbv=R[refKey].sim.map(v=>parseFloat(v));
+    const sm={},cm={};
+    if(R.CAT12)for(let i=0;i<R.CAT12.sim.length;i++)sm[R.CAT12.sim[i]]=R.CAT12.prob[i];
+    if(R.CAT3)for(let i=0;i<R.CAT3.sim.length;i++)cm[R.CAT3.sim[i]]=R.CAT3.prob[i];
     for(const v of pbv)lines.push([v,sm[String(v)]||'',cm[String(v)]||''].join(','));
-    dl(`hazard_calc_${R.TTL.mesh}.csv`,lines.join('\n'));
+    dl(`hazard_calc_${R[refKey].mesh}.csv`,lines.join('\n'));
 }
 function downloadSiteCSV(){
-    if(!lastResults)return;const mesh=lastResults.TTL.mesh;
+    if(!lastResults)return;const mesh=(lastResults.TTL||Object.values(lastResults)[0]).mesh;
     const lines=[t('csvHeaderSite'),...csvMeta(),''];
     // Ground
     lines.push(`[${t('groundTitle')}]`);
