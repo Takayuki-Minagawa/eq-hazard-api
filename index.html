@@ -108,7 +108,7 @@
         <div class="header-inner">
             <div>
                 <h1 data-i18n="title">地震ハザードカーブ表示アプリ</h1>
-                <p data-i18n="subtitle">J-SHIS（防災科学技術研究所）より50年超過確率（平均ケース）を取得・表示</p>
+                <p data-i18n="subtitle">J-SHIS（防災科学技術研究所）より確率論的地震ハザード情報を取得・表示</p>
             </div>
             <div class="header-controls">
                 <button class="btn-header" id="btnLang" onclick="toggleLang()">EN</button>
@@ -161,8 +161,7 @@
             <div class="download-section" id="downloadSection">
                 <h3 data-i18n="dlTitle">CSV ダウンロード</h3>
                 <div class="download-btns">
-                    <button class="btn-dl" onclick="downloadRawCSV()" data-i18n="dlRaw">取得データ CSV</button>
-                    <button class="btn-dl" onclick="downloadCalcCSV()" data-i18n="dlCalc">算定データ CSV</button>
+                    <button class="btn-dl" onclick="downloadRawCSV()" data-i18n="dlRaw">ハザードカーブ CSV</button>
                     <button class="btn-dl" onclick="downloadSiteCSV()" data-i18n="dlSite">サイト情報 CSV</button>
                 </div>
             </div>
@@ -170,7 +169,7 @@
                 <span data-i18n="noteSource">データ出典:</span>
                 <a href="https://www.j-shis.bosai.go.jp/" target="_blank" rel="noopener">J-SHIS</a>
                 <span data-i18n="noteOrg">（防災科学技術研究所）</span><br>
-                <span data-i18n="noteSpec">バージョン: Y2024 / 平均ケース(AVR) / 50年超過確率(T50)</span><br>
+                <span data-i18n="noteSpec">評価期間・ケースはコンボボックスで選択可</span><br>
                 <span data-i18n="noteMetric">地震動指標: 工学的基盤最大速度 PBV [cm/s]</span>
             </div>
         </div>
@@ -253,7 +252,7 @@
 const I18N = {
 ja: {
     htmlTitle:'地震ハザードカーブ表示アプリ',title:'地震ハザードカーブ表示アプリ',
-    subtitle:'J-SHIS（防災科学技術研究所）より50年超過確率（平均ケース）を取得・表示',
+    subtitle:'J-SHIS（防災科学技術研究所）より確率論的地震ハザード情報を取得・表示',
     btnTheme:'ダークモード',btnThemeLight:'ライトモード',
     mapTitle:'対象地点の選択',infoTitle:'地点情報・座標入力',
     labelLat:'緯度（°N）',labelLng:'経度（°E）',btnFetch:'取得',
@@ -265,9 +264,9 @@ ja: {
     statusErrorCors:'\n※ CORS制限の可能性があります。ローカルサーバー経由でお試しください。',
     statusErrorRange:'日本国内の地点を選択してください（緯度20-47°、経度122-154°）',
     statusErrorInput:'緯度・経度を正しく入力してください。',
-    dlTitle:'CSV ダウンロード',dlRaw:'取得データ CSV',dlCalc:'算定データ CSV',dlSite:'サイト情報 CSV',
+    dlTitle:'CSV ダウンロード',dlRaw:'ハザードカーブ CSV',dlSite:'サイト情報 CSV',
     noteSource:'データ出典:',noteOrg:'（防災科学技術研究所）',
-    noteSpec:'バージョン: Y2024 / 平均ケース(AVR) / 50年超過確率(T50)',
+    noteSpec:'評価期間・ケースはコンボボックスで選択可',
     noteMetric:'地震動指標: 工学的基盤最大速度 PBV [cm/s]',
     chartMainTitle:'ハザードカーブ（海溝型 vs 直下型）',
     chartPlaceholder:'地点を選択するとハザードカーブが表示されます',
@@ -275,10 +274,9 @@ ja: {
     lblTTL:'全ての地震',lblCAT12:'海溝型地震（カテゴリーI+II）',lblCAT3b:'直下型地震（カテゴリーIII）',
     tooltipPBV:'PBV',tooltipProb:'超過確率',
     popupTitle:'選択地点',popupLat:'緯度',popupLng:'経度',
-    csvHeaderRaw:'地震ハザードカーブ 取得データ（APIレスポンス）',csvHeaderCalc:'地震ハザードカーブ 算定データ（海溝型・直下型）',
+    csvHeaderRaw:'地震ハザードカーブ 取得データ',
     csvLat:'緯度',csvLng:'経度',csvMesh:'メッシュコード',csvVersion:'バージョン',
     csvColPBV:'PBV[cm/s]',csvColTTL:'全地震(TTL_MTTL)',csvColCAT3:'直下型(LND_MTTL)',csvColCAT12:'海溝型I+II(PPE_MTTL)',
-    csvColSub:'海溝型地震(I+II)',csvColCru:'直下型地震(III)',
     fetching:'取得中...',
     // Site
     siteTitle:'地盤・サイト評価情報',groundTitle:'表層地盤情報',returnTitle:'超過確率別 計測震度',
@@ -301,7 +299,7 @@ ja: {
 },
 en: {
     htmlTitle:'Seismic Hazard Curve Viewer',title:'Seismic Hazard Curve Viewer',
-    subtitle:'50-year exceedance probability (average case) from J-SHIS (NIED)',
+    subtitle:'Probabilistic seismic hazard data from J-SHIS (NIED)',
     btnTheme:'Dark Mode',btnThemeLight:'Light Mode',
     mapTitle:'Select Target Location',infoTitle:'Location Info / Coordinate Input',
     labelLat:'Latitude (°N)',labelLng:'Longitude (°E)',btnFetch:'Fetch',
@@ -311,9 +309,9 @@ en: {
     statusErrorFetch:'Fetch error: {msg}',statusErrorCors:'\n* Possibly blocked by CORS. Try via a local server.',
     statusErrorRange:'Please select a location within Japan (Lat 20-47, Lon 122-154)',
     statusErrorInput:'Please enter valid latitude and longitude.',
-    dlTitle:'CSV Download',dlRaw:'Raw Data CSV',dlCalc:'Calculated Data CSV',dlSite:'Site Info CSV',
+    dlTitle:'CSV Download',dlRaw:'Hazard Curve CSV',dlSite:'Site Info CSV',
     noteSource:'Data source:',noteOrg:' (NIED)',
-    noteSpec:'Version: Y2024 / Average(AVR) / 50-year exceedance(T50)',
+    noteSpec:'Period and case are selectable via the dropdown',
     noteMetric:'Metric: Peak Bedrock Velocity PBV [cm/s]',
     chartMainTitle:'Hazard Curves (Subduction vs Crustal)',
     chartPlaceholder:'Select a location to display hazard curves',
@@ -321,10 +319,9 @@ en: {
     lblTTL:'All Earthquakes',lblCAT12:'Subduction (Category I+II)',lblCAT3b:'Crustal (Category III)',
     tooltipPBV:'PBV',tooltipProb:'Exc. Prob.',
     popupTitle:'Selected Location',popupLat:'Lat',popupLng:'Lon',
-    csvHeaderRaw:'Seismic Hazard Curve - Raw API Data',csvHeaderCalc:'Seismic Hazard Curve - Calculated Data (Subduction / Crustal)',
+    csvHeaderRaw:'Seismic Hazard Curve Data',
     csvLat:'Latitude',csvLng:'Longitude',csvMesh:'Mesh Code',csvVersion:'Version',
     csvColPBV:'PBV[cm/s]',csvColTTL:'All(TTL_MTTL)',csvColCAT3:'Crustal(LND_MTTL)',csvColCAT12:'Subduction I+II(PPE_MTTL)',
-    csvColSub:'Subduction(I+II)',csvColCru:'Crustal(III)',
     fetching:'Fetching...',
     siteTitle:'Ground / Site Assessment',groundTitle:'Surface Ground Information',returnTitle:'Intensity by Exceedance Prob.',
     probTitle:'Exceedance Probability (30yr, All EQ)',sitePlaceholder:'Select a location to display',
@@ -602,7 +599,7 @@ function renderFaults(faults){
 // ================================================================
 //  Charts
 // ================================================================
-const CC={TTL:{b:'#2d3748',d:'#e2e8f0'},CAT1:{b:'#63b3ed',d:'#63b3ed'},CAT2:{b:'#48bb78',d:'#68d391'},CAT3:{b:'#ecc94b',d:'#fbd38d'},CAT12:{b:'#ed8936',d:'#f6ad55'}};
+const CC={TTL:{b:'#718096',d:'#a0aec0'},CAT3:{b:'#2b6cb0',d:'#63b3ed'},CAT12:{b:'#c53030',d:'#fc8181'}};
 function clr(k){return isDark?CC[k].d:CC[k].b}
 function makeChartCfg(datasets,xMax){
     const gc=isDark?'rgba(255,255,255,.08)':'rgba(0,0,0,.06)',tc=isDark?'#94a3b8':'#666',ttc=isDark?'#cbd5e0':'#333';
@@ -638,23 +635,13 @@ function downloadRawCSV(){
     if(!lastResults)return;const R=lastResults,lines=[t('csvHeaderRaw'),...csvMeta(),''];
     const refKey=R.TTL?'TTL':Object.keys(R)[0];
     const pbv=R[refKey].sim.map(v=>parseFloat(v));
-    const avail=['TTL','CAT1','CAT2','CAT3','CAT12'].filter(k=>R[k]);
+    const avail=['TTL','CAT12','CAT3'].filter(k=>R[k]);
     lines.push([t('csvColPBV'),...avail.map(k=>t('csvCol'+k))].join(','));
     const pm={};for(const k of avail){pm[k]={};for(let i=0;i<R[k].sim.length;i++)pm[k][R[k].sim[i]]=R[k].prob[i]}
     for(const v of pbv){const row=[v];for(const k of avail)row.push(pm[k][String(v)]||'');lines.push(row.join(','))}
     dl(`hazard_raw_${R[refKey].mesh}.csv`,lines.join('\n'));
 }
-function downloadCalcCSV(){
-    if(!lastResults)return;const R=lastResults,lines=[t('csvHeaderCalc'),...csvMeta(),''];
-    const refKey=R.TTL?'TTL':(R.CAT12?'CAT12':Object.keys(R)[0]);
-    lines.push([t('csvColPBV'),t('csvColSub'),t('csvColCru')].join(','));
-    const pbv=R[refKey].sim.map(v=>parseFloat(v));
-    const sm={},cm={};
-    if(R.CAT12)for(let i=0;i<R.CAT12.sim.length;i++)sm[R.CAT12.sim[i]]=R.CAT12.prob[i];
-    if(R.CAT3)for(let i=0;i<R.CAT3.sim.length;i++)cm[R.CAT3.sim[i]]=R.CAT3.prob[i];
-    for(const v of pbv)lines.push([v,sm[String(v)]||'',cm[String(v)]||''].join(','));
-    dl(`hazard_calc_${R[refKey].mesh}.csv`,lines.join('\n'));
-}
+
 function downloadSiteCSV(){
     if(!lastResults)return;const mesh=(lastResults.TTL||Object.values(lastResults)[0]).mesh;
     const lines=[t('csvHeaderSite'),...csvMeta(),''];
