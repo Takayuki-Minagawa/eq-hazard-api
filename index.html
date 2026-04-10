@@ -595,6 +595,9 @@ function showLoading(show){
     const m=show?'add':'remove';
     document.getElementById('loadingChart').classList[m]('active');
     document.getElementById('btnFetch').disabled=show;
+    document.getElementById('selectParams').disabled=show;
+    document.getElementById('inputLat').disabled=show;
+    document.getElementById('inputLng').disabled=show;
     isFetching=show;
 }
 function toXY(sim,prob){
@@ -869,6 +872,7 @@ function downloadSiteCSV(){
 //  Map events
 // ================================================================
 map.on('click',function(e){
+    if(isFetching) return;
     const{lat,lng}=e.latlng;
     if(lat<20||lat>47||lng<122||lng>154){setStatus(t('statusErrorRange'),'error');return}
     if(marker)marker.setLatLng([lat,lng]);else marker=L.marker([lat,lng]).addTo(map);
