@@ -3,6 +3,7 @@
 // ================================================================
 
 let chartResponse = null;
+let chartDuctility = null;
 let chartFragility = null;
 let lastBuildingModel = null;
 let lastDamageResults = null;
@@ -119,6 +120,7 @@ function runDamageAssessment() {
 
     // 結果表示
     renderResponseChart(responseCurve, building);
+    renderDuctilityChart(responseCurve, building);
     renderFragilityChart();
     renderDamageSummary(damageResults, evalYears);
 
@@ -209,6 +211,67 @@ function renderResponseChart(responseCurve, building) {
                 y: { type: 'linear', min: 0, max: 0.08,
                      title: { display: true, text: t('bldgIDRLabel'), font: { size: 13, weight: 'bold' }, color: ttc },
                      grid: { color: gc }, ticks: { color: tc, callback: v => v.toFixed(3) } }
+            }
+        }
+    });
+}
+
+// ================================================================
+//  塑性率チャート（PGV vs μ）
+// ================================================================
+function renderDuctilityChart(responseCurve, building) {
+    const canvas = document.getElementById('chartDuctility');
+    if (!canvas) return;
+    canvas.style.display = 'block';
+    document.getElementById('placeholderDuctility').style.display = 'none';
+
+    if (chartDuctility) { chartDuctility.destroy(); chartDuctility = null; }
+
+    const gc = isDark ? 'rgba(255,255,255,.08)' : 'rgba(0,0,0,.06)';
+    const tc = isDark ? '#94a3b8' : '#666';
+    const ttc = isDark ? '#cbd5e0' : '#333';
+
+    const mainData = responseCurve.map(r => ({ x: r.pgv, y: r.mu }));
+    const maxPGV = Math.max(...responseCurve.map(r => r.pgv), 100);
+    const maxMu = Math.max(...responseCurve.map(r => r.mu), 2);
+
+    const datasets = [{
+        label: t('bldgDuctilityLine'),
+        data: mainData,
+        borderColor: isDark ? '#f6ad55' : '#dd6b20',
+        borderWidth: 2.5,
+        showLine: true,
+        pointRadius: 0,
+        pointHoverRadius: 4,
+        tension: 0.3
+    }, {
+        label: t('bldgMuElastic'),
+        data: [{ x: 0, y: 1 }, { x: maxPGV, y: 1 }],
+        borderColor: '#38a169',
+        borderWidth: 1.5,
+        borderDash: [6, 3],
+        showLine: true,
+        pointRadius: 0,
+        tension: 0
+    }];
+
+    chartDuctility = new Chart(canvas.getContext('2d'), {
+        type: 'scatter',
+        data: { datasets },
+        options: {
+            responsive: true, maintainAspectRatio: false,
+            interaction: { mode: 'nearest', axis: 'x', intersect: false },
+            plugins: {
+                legend: { position: 'top', labels: { usePointStyle: true, pointStyle: 'line', padding: 10, font: { size: 11 }, color: tc } },
+                tooltip: { callbacks: { label: c => `${c.dataset.label}: PGV=${c.parsed.x.toFixed(1)} cm/s, μ=${c.parsed.y.toFixed(2)}` } }
+            },
+            scales: {
+                x: { type: 'linear', min: 0, max: Math.ceil(maxPGV / 10) * 10,
+                     title: { display: true, text: 'PGV [cm/s]', font: { size: 13, weight: 'bold' }, color: ttc },
+                     grid: { color: gc }, ticks: { color: tc } },
+                y: { type: 'linear', min: 0, max: Math.ceil(maxMu) + 1,
+                     title: { display: true, text: t('bldgMuLabel'), font: { size: 13, weight: 'bold' }, color: ttc },
+                     grid: { color: gc }, ticks: { color: tc } }
             }
         }
     });
@@ -310,12 +373,15 @@ function invalidateDamageResults() {
 
     // チャートを破棄してプレースホルダに戻す
     if (chartResponse) { chartResponse.destroy(); chartResponse = null; }
+    if (chartDuctility) { chartDuctility.destroy(); chartDuctility = null; }
     if (chartFragility) { chartFragility.destroy(); chartFragility = null; }
 
     var el;
     el = document.getElementById('chartResponse');   if (el) el.style.display = 'none';
+    el = document.getElementById('chartDuctility');  if (el) el.style.display = 'none';
     el = document.getElementById('chartFragility');  if (el) el.style.display = 'none';
     el = document.getElementById('placeholderResponse');  if (el) el.style.display = '';
+    el = document.getElementById('placeholderDuctility'); if (el) el.style.display = '';
     el = document.getElementById('placeholderFragility'); if (el) el.style.display = '';
     el = document.getElementById('placeholderDamage');    if (el) el.style.display = '';
     el = document.getElementById('damageSummaryTable');   if (el) el.style.display = 'none';
@@ -342,11 +408,37 @@ function rerenderBuildingCharts() {
 
     const responseCurve = computeResponseCurve(lastBuildingModel, ARV, pbvForCurve);
     renderResponseChart(responseCurve, lastBuildingModel);
+    renderDuctilityChart(responseCurve, lastBuildingModel);
     renderFragilityChart();
     if (lastDamageResults) {
         const evalYears = curPer === 'T30' ? 30 : 50;
         renderDamageSummary(lastDamageResults, evalYears);
     }
+}
+
+// ================================================================
+//  評価手法の説明（バイリニア図の下に表示）
+// ================================================================
+function renderEvalExplanation() {
+    const el = document.getElementById('evalExplanation');
+    if (!el) return;
+    const ja = (typeof currentLang !== 'undefined') ? currentLang === 'ja' : true;
+    const title = ja ? '評価手法の概要' : 'Assessment Method Overview';
+    const steps = ja ? [
+        { t:'① 応答推定 — 等価線形化法', d:'等価1質点系モデルの等価周期 Teq・等価減衰 heq を反復計算し、告示スペクトル形状から最大応答変位を推定します。PBV に地盤増幅率 ARV を乗じて地表面 PGV を算出します。' },
+        { t:'② 被害判定 — 層間変形角 (IDR) 基準', d:'D1(軽微)≥1/200, D2(小破)≥1/120, D3(中破)≥1/60, D4(大破)≥1/30, D5(倒壊)≥1/15' },
+        { t:'③ フラジリティ — 対数正規分布モデル', d:'需要・容量の不確実性を対数標準偏差 β=0.55〜0.60 の対数正規分布でモデル化し、各被害レベルの超過確率を算出します。' },
+        { t:'④ 被害関数 — ハザード積分', d:'ハザードカーブとフラジリティの畳み込み積分で年超過確率を算出し、ポアソン過程仮定で期間超過確率に変換します。' }
+    ] : [
+        { t:'① Response — Equivalent Linearization', d:'Iteratively computes equivalent period Teq and damping heq for SDOF model. Uses notification spectrum shape to estimate max displacement. PGV = PBV × ARV.' },
+        { t:'② Damage — IDR Thresholds', d:'D1(Slight)≥1/200, D2(Light)≥1/120, D3(Moderate)≥1/60, D4(Heavy)≥1/30, D5(Collapse)≥1/15' },
+        { t:'③ Fragility — Lognormal Model', d:'Demand/capacity uncertainties modeled with lognormal distribution (β=0.55–0.60) to compute exceedance probability for each damage level.' },
+        { t:'④ Damage Function — Hazard Integration', d:'Convolution of hazard curve and fragility yields annual exceedance rate, converted to period probability via Poisson process.' }
+    ];
+    el.innerHTML = '<h4 style="font-size:.82rem;color:var(--text-secondary);margin-bottom:6px;padding-bottom:4px;border-bottom:1px solid var(--border-color)">' + title + '</h4>' +
+        '<div style="font-size:.75rem;color:var(--text-muted);line-height:1.7;padding:8px 10px;background:var(--bg-table-th);border-radius:6px">' +
+        steps.map(function(s){ return '<div style="margin-bottom:6px"><strong style="color:var(--text-secondary)">' + s.t + '</strong><br>' + s.d + '</div>'; }).join('') +
+        '</div>';
 }
 
 // ================================================================

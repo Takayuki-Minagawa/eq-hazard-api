@@ -304,6 +304,7 @@
                     <div class="building-note" data-i18n="bldgNote">
                         本ツールは簡易的な地震リスク概算を目的としています。等価1質点バイリニアモデルと等価線形化法による推定であり、詳細な評価には多質点系モデルによる時刻歴応答解析が必要です。
                     </div>
+                    <div id="evalExplanation" style="margin-top:10px"></div>
                 </div>
             </div>
         </div>
@@ -329,11 +330,23 @@
                 </div>
             </div>
 
-            <!-- Tab2: Response (PGV vs IDR) -->
+            <!-- Tab2: Response (PGV vs IDR + PGV vs μ) -->
             <div class="result-tab-content" id="tab-response">
-                <div class="chart-container" style="height:480px;">
-                    <div class="chart-placeholder" id="placeholderResponse" data-i18n="bldgResponsePlaceholder">建物モデルを設定し「被害予測を実行」を押してください</div>
-                    <canvas id="chartResponse" style="display:none;"></canvas>
+                <div class="charts-row">
+                    <div class="chart-wrapper">
+                        <h3 data-i18n="responseChartTitle1">応答予測（PGV − 層間変形角）</h3>
+                        <div class="chart-container">
+                            <div class="chart-placeholder" id="placeholderResponse" data-i18n="bldgResponsePlaceholder">建物モデルを設定し「被害予測を実行」を押してください</div>
+                            <canvas id="chartResponse" style="display:none;"></canvas>
+                        </div>
+                    </div>
+                    <div class="chart-wrapper">
+                        <h3 data-i18n="responseChartTitle2">応答予測（PGV − 塑性率）</h3>
+                        <div class="chart-container">
+                            <div class="chart-placeholder" id="placeholderDuctility" data-i18n="bldgDuctilityPlaceholder">建物モデルを設定し「被害予測を実行」を押してください</div>
+                            <canvas id="chartDuctility" style="display:none;"></canvas>
+                        </div>
+                    </div>
                 </div>
             </div>
 
@@ -442,7 +455,7 @@ ja: {
     csvFaultName:'断層名',csvFaultType:'分類',csvFaultProb:'発生確率',csvFaultMag:'Mw',csvFaultInt:'計測震度',
     csvExcProb:'超過確率(30年)',csvExcInt:'震度閾値',
     // Building Model
-    bldgTitle:'建物モデル入力',bldgPresetTitle:'構造種別・階数',bldgParamTitle:'構造パラメータ',
+    bldgTitle:'建物モデル入力',bldgPresetTitle:'構造種別・階数',bldgParamTitle:'構造パラメータ（参考値）',
     bldgModelTitle:'バイリニアモデル概要',bldgLabelPreset:'構造種別',bldgLabelFloors:'階数',
     bldgBtnRun:'被害予測を実行',
     bldgNote:'本ツールは簡易的な地震リスク概算を目的としています。等価1質点バイリニアモデルと等価線形化法による推定であり、詳細な評価には多質点系モデルによる時刻歴応答解析が必要です。',
@@ -456,6 +469,9 @@ ja: {
     bldgFragPlaceholder:'被害予測を実行するとフラジリティカーブが表示されます',
     bldgDmgPlaceholder:'被害予測を実行すると被害確率が表示されます',
     bldgResponseLine:'建物応答（PGV-IDR）',bldgIDRLabel:'最大層間変形角 IDR [rad]',bldgFragProb:'超過確率 P',
+    bldgDuctilityLine:'塑性率 μ',bldgMuLabel:'塑性率 μ [-]',bldgMuElastic:'弾性限界 (μ=1)',
+    responseChartTitle1:'応答予測（PGV − 層間変形角）',responseChartTitle2:'応答予測（PGV − 塑性率）',
+    bldgDuctilityPlaceholder:'建物モデルを設定し「被害予測を実行」を押してください',
     bldgDmgTitle:'被害確率（{years}超過確率）',dmgThLevel:'被害レベル',dmgThPeriod:'期間超過確率',dmgThAnnual:'年超過確率'
 },
 en: {
@@ -500,7 +516,7 @@ en: {
     csvFaultName:'Fault Name',csvFaultType:'Type',csvFaultProb:'Probability',csvFaultMag:'Mw',csvFaultInt:'JMA Int.',
     csvExcProb:'Exc. Prob.(30yr)',csvExcInt:'Intensity Threshold',
     // Building Model
-    bldgTitle:'Building Model Input',bldgPresetTitle:'Structure Type / Floors',bldgParamTitle:'Structural Parameters',
+    bldgTitle:'Building Model Input',bldgPresetTitle:'Structure Type / Floors',bldgParamTitle:'Structural Parameters (Reference)',
     bldgModelTitle:'Bilinear Model Overview',bldgLabelPreset:'Structure Type',bldgLabelFloors:'Floors',
     bldgBtnRun:'Run Damage Assessment',
     bldgNote:'This tool provides a simplified seismic risk estimate using an equivalent SDOF bilinear model with the equivalent linearization method. For detailed evaluation, multi-DOF time-history analysis is required.',
@@ -514,6 +530,9 @@ en: {
     bldgFragPlaceholder:'Run damage assessment to display fragility curves',
     bldgDmgPlaceholder:'Run damage assessment to display damage probabilities',
     bldgResponseLine:'Building Response (PGV-IDR)',bldgIDRLabel:'Max Inter-story Drift Ratio IDR [rad]',bldgFragProb:'Exceedance Probability P',
+    bldgDuctilityLine:'Ductility μ',bldgMuLabel:'Ductility μ [-]',bldgMuElastic:'Elastic Limit (μ=1)',
+    responseChartTitle1:'Response (PGV − Drift Ratio)',responseChartTitle2:'Response (PGV − Ductility)',
+    bldgDuctilityPlaceholder:'Set building model and press "Run Damage Assessment"',
     bldgDmgTitle:'Damage Probability ({years} Exceedance)',dmgThLevel:'Damage Level',dmgThPeriod:'Period Exceedance',dmgThAnnual:'Annual Rate'
 }
 };
@@ -550,6 +569,7 @@ function applyLang(){
     if(lastFaults) renderFaults(lastFaults);
     if(typeof populatePresetOptions==='function') populatePresetOptions();
     if(typeof rerenderBuildingCharts==='function') rerenderBuildingCharts();
+    if(typeof renderEvalExplanation==='function') renderEvalExplanation();
 }
 function toggleLang(){currentLang=currentLang==='ja'?'en':'ja';applyLang()}
 
@@ -899,6 +919,7 @@ if(window.matchMedia&&window.matchMedia('(prefers-color-scheme:dark)').matches){
 
 // Init building model UI
 if(typeof populatePresetOptions==='function'){populatePresetOptions();onPresetChange()}
+if(typeof renderEvalExplanation==='function') renderEvalExplanation();
 
 // Auto-detect latest J-SHIS version
 (async function detectVersion(){
