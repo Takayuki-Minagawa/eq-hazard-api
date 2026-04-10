@@ -245,7 +245,7 @@
             <h2 data-i18n="bldgTitle">建物モデル入力</h2>
             <div class="building-grid">
                 <div class="building-form">
-                    <h3 data-i18n="bldgPresetTitle" style="font-size:.88rem;color:var(--text-secondary);margin-bottom:8px;padding-bottom:6px;border-bottom:1px solid var(--border-color)">構造種別・階数</h3>
+                    <h3 data-i18n="bldgPresetTitle" style="font-size:.88rem;color:var(--text-secondary);margin-bottom:8px;padding-bottom:6px;border-bottom:1px solid var(--border-color)">構造種別・階数（参考値）</h3>
                     <div class="param-grid-2">
                         <div>
                             <label for="selPreset" data-i18n="bldgLabelPreset">構造種別</label>
@@ -256,7 +256,7 @@
                             <input type="number" id="inputFloors" value="3" min="1" max="60" step="1" onchange="onFloorsChange()">
                         </div>
                     </div>
-                    <h3 data-i18n="bldgParamTitle" style="font-size:.88rem;color:var(--text-secondary);margin-top:14px;margin-bottom:8px;padding-bottom:6px;border-bottom:1px solid var(--border-color)">構造パラメータ</h3>
+                    <h3 data-i18n="bldgParamTitle" style="font-size:.88rem;color:var(--text-secondary);margin-top:14px;margin-bottom:8px;padding-bottom:6px;border-bottom:1px solid var(--border-color)">構造パラメータ（参考値）</h3>
                     <div class="param-grid">
                         <div>
                             <label for="inputW">W [kN]</label>
@@ -290,17 +290,17 @@
                 </div>
                 <div>
                     <h3 data-i18n="bldgModelTitle" style="font-size:.88rem;color:var(--text-secondary);margin-bottom:8px;padding-bottom:6px;border-bottom:1px solid var(--border-color)">バイリニアモデル概要</h3>
-                    <div style="font-family:monospace;font-size:.8rem;line-height:1.5;padding:12px;background:var(--bg-table-th);border-radius:6px;color:var(--text-secondary);white-space:pre">     Q
-     |        / K2=&alpha;&middot;K1
-     |       /
- Qy --|------/
-     |    /|
-     |   / |  K1
-     |  /  |
-     | /   |
-     |/    |
- ----+----+---&gt; &delta;
-     |   &delta;y   &delta;max</div>
+                    <div style="font-family:monospace;font-size:.8rem;line-height:1.5;padding:12px;background:var(--bg-table-th);border-radius:6px;color:var(--text-secondary);white-space:pre">  Q |                    / K2=&alpha;&middot;K1
+    |                  /
+ Qy |----------------/
+    |            /   |
+    |          /     |   K1
+    |        /       |
+    |      /         |
+    |    /           |
+    |  /             |
+  --+--------+-------+--&gt; &delta;
+    |       &delta;y     &delta;max</div>
                     <div class="building-note" data-i18n="bldgNote">
                         本ツールは簡易的な地震リスク概算を目的としています。等価1質点バイリニアモデルと等価線形化法による推定であり、詳細な評価には多質点系モデルによる時刻歴応答解析が必要です。
                     </div>
@@ -455,7 +455,7 @@ ja: {
     csvFaultName:'断層名',csvFaultType:'分類',csvFaultProb:'発生確率',csvFaultMag:'Mw',csvFaultInt:'計測震度',
     csvExcProb:'超過確率(30年)',csvExcInt:'震度閾値',
     // Building Model
-    bldgTitle:'建物モデル入力',bldgPresetTitle:'構造種別・階数',bldgParamTitle:'構造パラメータ（参考値）',
+    bldgTitle:'建物モデル入力',bldgPresetTitle:'構造種別・階数（参考値）',bldgParamTitle:'構造パラメータ（参考値）',
     bldgModelTitle:'バイリニアモデル概要',bldgLabelPreset:'構造種別',bldgLabelFloors:'階数',
     bldgBtnRun:'被害予測を実行',
     bldgNote:'本ツールは簡易的な地震リスク概算を目的としています。等価1質点バイリニアモデルと等価線形化法による推定であり、詳細な評価には多質点系モデルによる時刻歴応答解析が必要です。',
@@ -516,7 +516,7 @@ en: {
     csvFaultName:'Fault Name',csvFaultType:'Type',csvFaultProb:'Probability',csvFaultMag:'Mw',csvFaultInt:'JMA Int.',
     csvExcProb:'Exc. Prob.(30yr)',csvExcInt:'Intensity Threshold',
     // Building Model
-    bldgTitle:'Building Model Input',bldgPresetTitle:'Structure Type / Floors',bldgParamTitle:'Structural Parameters (Reference)',
+    bldgTitle:'Building Model Input',bldgPresetTitle:'Structure Type / Floors (Reference)',bldgParamTitle:'Structural Parameters (Reference)',
     bldgModelTitle:'Bilinear Model Overview',bldgLabelPreset:'Structure Type',bldgLabelFloors:'Floors',
     bldgBtnRun:'Run Damage Assessment',
     bldgNote:'This tool provides a simplified seismic risk estimate using an equivalent SDOF bilinear model with the equivalent linearization method. For detailed evaluation, multi-DOF time-history analysis is required.',
