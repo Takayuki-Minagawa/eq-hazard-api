@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>地震ハザードカーブ表示アプリ</title>
+    <title>地震ハザード情報 × 建物被害予測ツール</title>
     <link rel="icon" type="image/svg+xml" href="favicon.svg">
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
@@ -95,11 +95,40 @@
         .badge-sub{background:var(--badge-sub-bg);color:var(--badge-sub-text)}
         .badge-cru{background:var(--badge-cru-bg);color:var(--badge-cru-text)}
         .fault-placeholder{color:var(--text-faint);font-size:.85rem;padding:20px;text-align:center}
+        /* Building Model */
+        .building-panel{grid-column:1/-1}
+        .building-grid{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+        .building-form label{display:block;font-size:.78rem;color:var(--text-muted);margin-bottom:3px}
+        .building-form input,.building-form select{width:100%;padding:7px 10px;border:1px solid var(--border-input);border-radius:4px;font-size:.9rem;background:var(--bg-input);color:var(--text-primary);transition:background .3s,border-color .3s,color .3s}
+        .building-form input:focus,.building-form select:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 2px rgba(49,130,206,.2)}
+        .building-form input[readonly]{opacity:.7;cursor:default}
+        .param-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-top:10px}
+        .param-grid-2{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px}
+        .btn-run{padding:10px 24px;background:linear-gradient(135deg,#2b6cb0,#3182ce);color:#fff;border:none;border-radius:6px;font-size:.95rem;font-weight:600;cursor:pointer;transition:background .2s,transform .1s;width:100%;margin-top:14px}
+        .btn-run:hover{background:linear-gradient(135deg,#2c5282,#2b6cb0);transform:translateY(-1px)}
+        .btn-run:disabled{background:#a0aec0;cursor:not-allowed;transform:none}
+        .building-note{font-size:.75rem;color:var(--text-faint);margin-top:12px;line-height:1.6;padding:8px;border:1px dashed var(--border-color);border-radius:4px}
+        /* Result Tabs */
+        .result-tabs{display:flex;gap:0;border-bottom:2px solid var(--border-color);margin-bottom:16px}
+        .result-tab-btn{padding:8px 20px;background:transparent;color:var(--text-muted);border:none;border-bottom:2px solid transparent;margin-bottom:-2px;font-size:.88rem;cursor:pointer;transition:color .2s,border-color .2s;white-space:nowrap}
+        .result-tab-btn:hover{color:var(--text-primary)}
+        .result-tab-btn.active{color:var(--accent);border-bottom-color:var(--accent);font-weight:600}
+        .result-tab-content{display:none}
+        .result-tab-content:first-of-type{display:block}
+        /* Damage Summary */
+        .dmg-table{width:100%;border-collapse:collapse;font-size:.88rem;margin-top:12px}
+        .dmg-table th{text-align:left;padding:8px 10px;background:var(--bg-table-th);color:var(--text-secondary);font-weight:600;border-bottom:1px solid var(--border-color)}
+        .dmg-table td{padding:7px 10px;border-bottom:1px solid var(--border-color)}
+        .dmg-badge{display:inline-block;padding:2px 10px;border-radius:3px;font-size:.78rem;font-weight:600}
+        .dmg-bar-bg{height:16px;background:var(--bg-table-th);border-radius:3px;overflow:hidden;min-width:80px}
+        .dmg-bar{height:100%;border-radius:3px;transition:width .5s ease}
         @media(max-width:960px){
             .main-grid{grid-template-columns:1fr}
-            .map-panel,.info-panel,.chart-panel,.site-panel,.fault-panel{grid-column:1}
-            .charts-row,.site-grid{grid-template-columns:1fr}
+            .map-panel,.info-panel,.chart-panel,.site-panel,.fault-panel,.building-panel{grid-column:1}
+            .charts-row,.site-grid,.building-grid,.param-grid{grid-template-columns:1fr}
+            .param-grid-2{grid-template-columns:1fr}
             .header-inner{flex-wrap:wrap}
+            .result-tabs{overflow-x:auto}
         }
     </style>
 </head>
@@ -107,8 +136,8 @@
     <header>
         <div class="header-inner">
             <div>
-                <h1 data-i18n="title">地震ハザードカーブ表示アプリ</h1>
-                <p data-i18n="subtitle">J-SHIS（防災科学技術研究所）より確率論的地震ハザード情報を取得・表示</p>
+                <h1 data-i18n="title">地震ハザード情報 × 建物被害予測ツール</h1>
+                <p data-i18n="subtitle">J-SHIS（防災科学技術研究所）のハザード情報と簡易建物モデルによる被害予測</p>
             </div>
             <div class="header-controls">
                 <button class="btn-header" id="btnLang" onclick="toggleLang()">EN</button>
@@ -211,15 +240,126 @@
             </div>
         </div>
 
-        <!-- Chart -->
-        <div class="panel chart-panel">
-            <h2 data-i18n="chartMainTitle">ハザードカーブ</h2>
-            <div style="position:relative;">
-                <div class="chart-container" style="height:480px;">
-                    <div class="chart-placeholder" id="placeholderChart" data-i18n="chartPlaceholder">地点を選択するとハザードカーブが表示されます</div>
-                    <canvas id="chartMain" style="display:none;"></canvas>
+        <!-- Building Model Input -->
+        <div class="panel building-panel">
+            <h2 data-i18n="bldgTitle">建物モデル入力</h2>
+            <div class="building-grid">
+                <div class="building-form">
+                    <h3 data-i18n="bldgPresetTitle" style="font-size:.88rem;color:var(--text-secondary);margin-bottom:8px;padding-bottom:6px;border-bottom:1px solid var(--border-color)">構造種別・階数</h3>
+                    <div class="param-grid-2">
+                        <div>
+                            <label for="selPreset" data-i18n="bldgLabelPreset">構造種別</label>
+                            <select id="selPreset" onchange="onPresetChange()"></select>
+                        </div>
+                        <div>
+                            <label for="inputFloors" data-i18n="bldgLabelFloors">階数</label>
+                            <input type="number" id="inputFloors" value="3" min="1" max="60" step="1" onchange="onFloorsChange()">
+                        </div>
+                    </div>
+                    <h3 data-i18n="bldgParamTitle" style="font-size:.88rem;color:var(--text-secondary);margin-top:14px;margin-bottom:8px;padding-bottom:6px;border-bottom:1px solid var(--border-color)">構造パラメータ</h3>
+                    <div class="param-grid">
+                        <div>
+                            <label for="inputW">W [kN]</label>
+                            <input type="number" id="inputW" step="1" readonly>
+                        </div>
+                        <div>
+                            <label for="inputHe">He [m]</label>
+                            <input type="number" id="inputHe" step="0.01" readonly>
+                        </div>
+                        <div>
+                            <label for="inputT1">T1 [s]</label>
+                            <input type="number" id="inputT1" step="0.001" readonly>
+                        </div>
+                    </div>
+                    <div class="param-grid">
+                        <div>
+                            <label for="inputCy">Cy [-]</label>
+                            <input type="number" id="inputCy" step="0.01" readonly>
+                        </div>
+                        <div>
+                            <label for="inputAlpha" data-i18n-label="bldgAlpha">&alpha; [-]</label>
+                            <input type="number" id="inputAlpha" step="0.01" readonly>
+                        </div>
+                        <div>
+                            <label for="inputH">h [-]</label>
+                            <input type="number" id="inputH" step="0.01" readonly>
+                        </div>
+                    </div>
+                    <button class="btn-run" onclick="runDamageAssessment()" data-i18n="bldgBtnRun">被害予測を実行</button>
+                    <div id="bldgStatus" style="display:none;padding:8px 12px;border-radius:6px;font-size:.85rem;margin-top:8px"></div>
                 </div>
-                <div class="loading-overlay" id="loadingChart"><div class="spinner"></div></div>
+                <div>
+                    <h3 data-i18n="bldgModelTitle" style="font-size:.88rem;color:var(--text-secondary);margin-bottom:8px;padding-bottom:6px;border-bottom:1px solid var(--border-color)">バイリニアモデル概要</h3>
+                    <div style="font-family:monospace;font-size:.8rem;line-height:1.5;padding:12px;background:var(--bg-table-th);border-radius:6px;color:var(--text-secondary);white-space:pre">     Q
+     |        / K2=&alpha;&middot;K1
+     |       /
+ Qy --|------/
+     |    /|
+     |   / |  K1
+     |  /  |
+     | /   |
+     |/    |
+ ----+----+---&gt; &delta;
+     |   &delta;y   &delta;max</div>
+                    <div class="building-note" data-i18n="bldgNote">
+                        本ツールは簡易的な地震リスク概算を目的としています。等価1質点バイリニアモデルと等価線形化法による推定であり、詳細な評価には多質点系モデルによる時刻歴応答解析が必要です。
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Result Tabs -->
+        <div class="panel chart-panel">
+            <h2 data-i18n="resultTitle">解析結果</h2>
+            <div class="result-tabs">
+                <button class="result-tab-btn active" data-tab="hazard" onclick="switchResultTab('hazard')" data-i18n="tabHazard">ハザードカーブ</button>
+                <button class="result-tab-btn" data-tab="response" onclick="switchResultTab('response')" data-i18n="tabResponse">応答予測</button>
+                <button class="result-tab-btn" data-tab="fragility" onclick="switchResultTab('fragility')" data-i18n="tabFragility">フラジリティ</button>
+                <button class="result-tab-btn" data-tab="damage" onclick="switchResultTab('damage')" data-i18n="tabDamage">被害関数</button>
+            </div>
+
+            <!-- Tab1: Hazard Curve (既存) -->
+            <div class="result-tab-content" id="tab-hazard" style="display:block;">
+                <div style="position:relative;">
+                    <div class="chart-container" style="height:480px;">
+                        <div class="chart-placeholder" id="placeholderChart" data-i18n="chartPlaceholder">地点を選択するとハザードカーブが表示されます</div>
+                        <canvas id="chartMain" style="display:none;"></canvas>
+                    </div>
+                    <div class="loading-overlay" id="loadingChart"><div class="spinner"></div></div>
+                </div>
+            </div>
+
+            <!-- Tab2: Response (PGV vs IDR) -->
+            <div class="result-tab-content" id="tab-response">
+                <div class="chart-container" style="height:480px;">
+                    <div class="chart-placeholder" id="placeholderResponse" data-i18n="bldgResponsePlaceholder">建物モデルを設定し「被害予測を実行」を押してください</div>
+                    <canvas id="chartResponse" style="display:none;"></canvas>
+                </div>
+            </div>
+
+            <!-- Tab3: Fragility Curves -->
+            <div class="result-tab-content" id="tab-fragility">
+                <div class="chart-container" style="height:480px;">
+                    <div class="chart-placeholder" id="placeholderFragility" data-i18n="bldgFragPlaceholder">被害予測を実行するとフラジリティカーブが表示されます</div>
+                    <canvas id="chartFragility" style="display:none;"></canvas>
+                </div>
+            </div>
+
+            <!-- Tab4: Damage Function / Summary -->
+            <div class="result-tab-content" id="tab-damage">
+                <div class="chart-placeholder" id="placeholderDamage" data-i18n="bldgDmgPlaceholder">被害予測を実行すると被害確率が表示されます</div>
+                <h3 id="damageSummaryTitle" style="font-size:.92rem;color:var(--text-secondary);margin-bottom:8px">被害確率</h3>
+                <table class="dmg-table" id="damageSummaryTable" style="display:none;">
+                    <thead>
+                        <tr>
+                            <th data-i18n="dmgThLevel">被害レベル</th>
+                            <th data-i18n="dmgThPeriod">期間超過確率</th>
+                            <th data-i18n="dmgThAnnual">年超過確率</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody id="damageSummaryBody"></tbody>
+                </table>
             </div>
         </div>
 
@@ -245,14 +385,19 @@
         </div>
     </div>
 
+<script src="js/building-model.js"></script>
+<script src="js/response-calc.js"></script>
+<script src="js/fragility.js"></script>
+<script src="js/damage-function.js"></script>
+<script src="js/ui-building.js"></script>
 <script>
 // ================================================================
 //  i18n
 // ================================================================
 const I18N = {
 ja: {
-    htmlTitle:'地震ハザードカーブ表示アプリ',title:'地震ハザードカーブ表示アプリ',
-    subtitle:'J-SHIS（防災科学技術研究所）より確率論的地震ハザード情報を取得・表示',
+    htmlTitle:'地震ハザード情報 × 建物被害予測ツール',title:'地震ハザード情報 × 建物被害予測ツール',
+    subtitle:'J-SHIS（防災科学技術研究所）のハザード情報と簡易建物モデルによる被害予測',
     btnTheme:'ダークモード',btnThemeLight:'ライトモード',
     mapTitle:'対象地点の選択',infoTitle:'地点情報・座標入力',
     labelLat:'緯度（°N）',labelLng:'経度（°E）',btnFetch:'取得',
@@ -295,11 +440,27 @@ ja: {
     csvHeaderSite:'サイト評価情報',csvVs30:'Vs30[m/s]',csvARV:'地盤増幅率(ARV)',csvTopo:'微地形区分',
     csvLandslide:'地すべり地形',csvReturnPeriod:'超過確率(50年)',csvIntensity:'計測震度',
     csvFaultName:'断層名',csvFaultType:'分類',csvFaultProb:'発生確率',csvFaultMag:'Mw',csvFaultInt:'計測震度',
-    csvExcProb:'超過確率(30年)',csvExcInt:'震度閾値'
+    csvExcProb:'超過確率(30年)',csvExcInt:'震度閾値',
+    // Building Model
+    bldgTitle:'建物モデル入力',bldgPresetTitle:'構造種別・階数',bldgParamTitle:'構造パラメータ',
+    bldgModelTitle:'バイリニアモデル概要',bldgLabelPreset:'構造種別',bldgLabelFloors:'階数',
+    bldgBtnRun:'被害予測を実行',
+    bldgNote:'本ツールは簡易的な地震リスク概算を目的としています。等価1質点バイリニアモデルと等価線形化法による推定であり、詳細な評価には多質点系モデルによる時刻歴応答解析が必要です。',
+    bldgStatusNoHazard:'先に地点を選択してハザードデータを取得してください。',
+    bldgStatusNoARV:'地盤増幅率（ARV）が取得できていません。地点を再選択してください。',
+    bldgStatusInvalid:'建物パラメータが不正です。入力値を確認してください。',
+    bldgStatusDone:'被害予測の計算が完了しました。',
+    // Result Tabs
+    resultTitle:'解析結果',tabHazard:'ハザードカーブ',tabResponse:'応答予測',tabFragility:'フラジリティ',tabDamage:'被害関数',
+    bldgResponsePlaceholder:'建物モデルを設定し「被害予測を実行」を押してください',
+    bldgFragPlaceholder:'被害予測を実行するとフラジリティカーブが表示されます',
+    bldgDmgPlaceholder:'被害予測を実行すると被害確率が表示されます',
+    bldgResponseLine:'建物応答（PGV-IDR）',bldgIDRLabel:'最大層間変形角 IDR [rad]',bldgFragProb:'超過確率 P',
+    bldgDmgTitle:'被害確率（{years}超過確率）',dmgThLevel:'被害レベル',dmgThPeriod:'期間超過確率',dmgThAnnual:'年超過確率'
 },
 en: {
-    htmlTitle:'Seismic Hazard Curve Viewer',title:'Seismic Hazard Curve Viewer',
-    subtitle:'Probabilistic seismic hazard data from J-SHIS (NIED)',
+    htmlTitle:'Seismic Hazard × Building Damage Assessment',title:'Seismic Hazard × Building Damage Assessment',
+    subtitle:'Hazard data from J-SHIS (NIED) with simplified building damage prediction',
     btnTheme:'Dark Mode',btnThemeLight:'Light Mode',
     mapTitle:'Select Target Location',infoTitle:'Location Info / Coordinate Input',
     labelLat:'Latitude (°N)',labelLng:'Longitude (°E)',btnFetch:'Fetch',
@@ -337,7 +498,23 @@ en: {
     csvHeaderSite:'Site Assessment Data',csvVs30:'Vs30[m/s]',csvARV:'Amplification(ARV)',csvTopo:'Microtopography',
     csvLandslide:'Landslide',csvReturnPeriod:'Exc.Prob.(50yr)',csvIntensity:'JMA Intensity',
     csvFaultName:'Fault Name',csvFaultType:'Type',csvFaultProb:'Probability',csvFaultMag:'Mw',csvFaultInt:'JMA Int.',
-    csvExcProb:'Exc. Prob.(30yr)',csvExcInt:'Intensity Threshold'
+    csvExcProb:'Exc. Prob.(30yr)',csvExcInt:'Intensity Threshold',
+    // Building Model
+    bldgTitle:'Building Model Input',bldgPresetTitle:'Structure Type / Floors',bldgParamTitle:'Structural Parameters',
+    bldgModelTitle:'Bilinear Model Overview',bldgLabelPreset:'Structure Type',bldgLabelFloors:'Floors',
+    bldgBtnRun:'Run Damage Assessment',
+    bldgNote:'This tool provides a simplified seismic risk estimate using an equivalent SDOF bilinear model with the equivalent linearization method. For detailed evaluation, multi-DOF time-history analysis is required.',
+    bldgStatusNoHazard:'Please select a location and fetch hazard data first.',
+    bldgStatusNoARV:'Ground amplification factor (ARV) is not available. Please re-select the location.',
+    bldgStatusInvalid:'Invalid building parameters. Please check your input.',
+    bldgStatusDone:'Damage assessment calculation completed.',
+    // Result Tabs
+    resultTitle:'Analysis Results',tabHazard:'Hazard Curve',tabResponse:'Response',tabFragility:'Fragility',tabDamage:'Damage Function',
+    bldgResponsePlaceholder:'Set building model and press "Run Damage Assessment"',
+    bldgFragPlaceholder:'Run damage assessment to display fragility curves',
+    bldgDmgPlaceholder:'Run damage assessment to display damage probabilities',
+    bldgResponseLine:'Building Response (PGV-IDR)',bldgIDRLabel:'Max Inter-story Drift Ratio IDR [rad]',bldgFragProb:'Exceedance Probability P',
+    bldgDmgTitle:'Damage Probability ({years} Exceedance)',dmgThLevel:'Damage Level',dmgThPeriod:'Period Exceedance',dmgThAnnual:'Annual Rate'
 }
 };
 
@@ -371,6 +548,8 @@ function applyLang(){
     if(lastGround) renderGround(lastGround,lastLandslide);
     if(lastReturn) renderReturn(lastReturn);
     if(lastFaults) renderFaults(lastFaults);
+    if(typeof populatePresetOptions==='function') populatePresetOptions();
+    if(typeof rerenderBuildingCharts==='function') rerenderBuildingCharts();
 }
 function toggleLang(){currentLang=currentLang==='ja'?'en':'ja';applyLang()}
 
@@ -381,6 +560,7 @@ function applyTheme(){
     document.body.classList.toggle('dark',isDark);
     document.getElementById('btnTheme').textContent=isDark?t('btnThemeLight'):t('btnTheme');
     if(lastResults) renderCharts(lastResults);
+    if(typeof rerenderBuildingCharts==='function') rerenderBuildingCharts();
 }
 function toggleTheme(){isDark=!isDark;applyTheme()}
 
@@ -415,6 +595,9 @@ function showLoading(show){
     const m=show?'add':'remove';
     document.getElementById('loadingChart').classList[m]('active');
     document.getElementById('btnFetch').disabled=show;
+    document.getElementById('selectParams').disabled=show;
+    document.getElementById('inputLat').disabled=show;
+    document.getElementById('inputLng').disabled=show;
     isFetching=show;
 }
 function toXY(sim,prob){
@@ -431,6 +614,7 @@ function pct(v){const n=parseFloat(v);return isNaN(n)?'-':(n*100).toFixed(1)+'%'
 async function fetchAllData(lat,lon){
     if(isFetching) return;
     getParams();
+    if(typeof invalidateDamageResults==='function') invalidateDamageResults();
     showLoading(true);
     setStatus(t('statusLoading'),'loading');
     lastLat=lat;lastLon=lon;
@@ -499,7 +683,8 @@ async function fetchAllData(lat,lon){
             renderFaults(lastFaults);
         }else{lastFaults=[];renderFaults([])}
 
-        setStatus(t('statusSuccess').replace('{mesh}',results.TTL.mesh),'success');
+        const successMesh=(results.TTL||Object.values(results)[0]).mesh;
+        setStatus(t('statusSuccess').replace('{mesh}',successMesh),'success');
     }catch(err){
         console.error(err);
         let msg=t('statusErrorFetch').replace('{msg}',err.message);
@@ -687,6 +872,7 @@ function downloadSiteCSV(){
 //  Map events
 // ================================================================
 map.on('click',function(e){
+    if(isFetching) return;
     const{lat,lng}=e.latlng;
     if(lat<20||lat>47||lng<122||lng>154){setStatus(t('statusErrorRange'),'error');return}
     if(marker)marker.setLatLng([lat,lng]);else marker=L.marker([lat,lng]).addTo(map);
@@ -710,6 +896,9 @@ document.getElementById('selectParams').addEventListener('change',()=>{if(lastLa
 //  Init
 // ================================================================
 if(window.matchMedia&&window.matchMedia('(prefers-color-scheme:dark)').matches){isDark=true;applyTheme()}
+
+// Init building model UI
+if(typeof populatePresetOptions==='function'){populatePresetOptions();onPresetChange()}
 
 // Auto-detect latest J-SHIS version
 (async function detectVersion(){
