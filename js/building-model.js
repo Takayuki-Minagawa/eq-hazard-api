@@ -36,18 +36,23 @@ function calcBuildingParams(presetKey, nFloors, overrides) {
 
     const g = 980; // cm/s²
 
-    // 基本パラメータ（プリセットから算定、overridesで上書き可能）
-    const W  = (overrides && overrides.W)  || preset.wPerFloor * nFloors;  // kN
-    const He = (overrides && overrides.He) || nFloors * preset.floorH * 0.7; // m
+    // 基本パラメータ（overridesが有限数なら採用、それ以外はプリセットから算定）
+    function ov(key, fallback) {
+        if (overrides && typeof overrides[key] === 'number' && isFinite(overrides[key])) return overrides[key];
+        return fallback;
+    }
+    const W  = ov('W',  preset.wPerFloor * nFloors);  // kN
+    const He = ov('He', nFloors * preset.floorH * 0.7); // m
     const H  = nFloors * preset.floorH; // 建物高さ [m]
-    const T1 = (overrides && overrides.T1) || preset.tCoeff * H;          // s
-    const Cy = (overrides && overrides.Cy) || preset.Cy;
-    const alpha = (overrides && overrides.alpha) || preset.alpha;
-    const h  = (overrides && overrides.h)  || preset.h;
+    const T1 = ov('T1', preset.tCoeff * H);           // s
+    const Cy = ov('Cy', preset.Cy);
+    const alpha = ov('alpha', preset.alpha);
+    const h  = ov('h',  preset.h);
+
+    // バリデーション: 必須パラメータが正値であること
+    if (W <= 0 || T1 <= 0 || Cy < 0 || alpha < 0 || h < 0 || He <= 0) return null;
 
     // 導出パラメータ
-    const W_cgscm = W * 1000 * 100; // kN → dyne (1kN = 1000N = 100000dyne... no)
-    // 単位系: SI（kN, m, s）で計算し、応答計算時にcm系に変換
     const M = W / 9.80665; // kN/(m/s²) = t (トン)
     const omega = 2 * Math.PI / T1;
     const K1 = omega * omega * M; // kN/m

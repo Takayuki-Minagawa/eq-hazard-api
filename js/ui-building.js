@@ -71,7 +71,7 @@ function runDamageAssessment() {
     let building;
 
     if (presetKey === 'CUSTOM') {
-        const overrides = {
+        const fields = {
             W:     parseFloat(document.getElementById('inputW').value),
             T1:    parseFloat(document.getElementById('inputT1').value),
             Cy:    parseFloat(document.getElementById('inputCy').value),
@@ -79,7 +79,15 @@ function runDamageAssessment() {
             h:     parseFloat(document.getElementById('inputH').value),
             He:    parseFloat(document.getElementById('inputHe').value)
         };
-        building = calcBuildingParams('RC_LOW', nFloors, overrides);
+        // カスタム入力の必須項目バリデーション（W, T1, He は正値必須）
+        if (!isFinite(fields.W) || fields.W <= 0 ||
+            !isFinite(fields.T1) || fields.T1 <= 0 ||
+            !isFinite(fields.He) || fields.He <= 0 ||
+            !isFinite(fields.Cy) || !isFinite(fields.alpha) || !isFinite(fields.h)) {
+            setBuildingStatus(t('bldgStatusInvalid'), 'error');
+            return;
+        }
+        building = calcBuildingParams('RC_LOW', nFloors, fields);
     } else {
         building = calcBuildingParams(presetKey, nFloors);
     }
@@ -294,6 +302,30 @@ function renderDamageSummary(damageResults, evalYears) {
 }
 
 // ================================================================
+//  被害予測結果の無効化（地点・条件変更時に呼び出す）
+// ================================================================
+function invalidateDamageResults() {
+    lastBuildingModel = null;
+    lastDamageResults = null;
+
+    // チャートを破棄してプレースホルダに戻す
+    if (chartResponse) { chartResponse.destroy(); chartResponse = null; }
+    if (chartFragility) { chartFragility.destroy(); chartFragility = null; }
+
+    var el;
+    el = document.getElementById('chartResponse');   if (el) el.style.display = 'none';
+    el = document.getElementById('chartFragility');  if (el) el.style.display = 'none';
+    el = document.getElementById('placeholderResponse');  if (el) el.style.display = '';
+    el = document.getElementById('placeholderFragility'); if (el) el.style.display = '';
+    el = document.getElementById('placeholderDamage');    if (el) el.style.display = '';
+    el = document.getElementById('damageSummaryTable');   if (el) el.style.display = 'none';
+    el = document.getElementById('bldgStatus');           if (el) el.style.display = 'none';
+
+    // ハザードカーブタブに戻す
+    switchResultTab('hazard');
+}
+
+// ================================================================
 //  テーマ・言語変更時の再描画
 // ================================================================
 function rerenderBuildingCharts() {
@@ -323,6 +355,7 @@ function rerenderBuildingCharts() {
 function populatePresetOptions() {
     const sel = document.getElementById('selPreset');
     if (!sel) return;
+    const prevValue = sel.value; // 切替前の選択値を保持
     sel.innerHTML = '';
     for (const [key, preset] of Object.entries(BUILDING_PRESETS)) {
         const opt = document.createElement('option');
@@ -334,4 +367,9 @@ function populatePresetOptions() {
     customOpt.value = 'CUSTOM';
     customOpt.textContent = currentLang === 'ja' ? 'カスタム' : 'Custom';
     sel.appendChild(customOpt);
+
+    // 切替前の選択値を復元（存在すれば）
+    if (prevValue && Array.from(sel.options).some(o => o.value === prevValue)) {
+        sel.value = prevValue;
+    }
 }

@@ -611,6 +611,7 @@ function pct(v){const n=parseFloat(v);return isNaN(n)?'-':(n*100).toFixed(1)+'%'
 async function fetchAllData(lat,lon){
     if(isFetching) return;
     getParams();
+    if(typeof invalidateDamageResults==='function') invalidateDamageResults();
     showLoading(true);
     setStatus(t('statusLoading'),'loading');
     lastLat=lat;lastLon=lon;
@@ -679,7 +680,8 @@ async function fetchAllData(lat,lon){
             renderFaults(lastFaults);
         }else{lastFaults=[];renderFaults([])}
 
-        setStatus(t('statusSuccess').replace('{mesh}',results.TTL.mesh),'success');
+        const successMesh=(results.TTL||Object.values(results)[0]).mesh;
+        setStatus(t('statusSuccess').replace('{mesh}',successMesh),'success');
     }catch(err){
         console.error(err);
         let msg=t('statusErrorFetch').replace('{msg}',err.message);
