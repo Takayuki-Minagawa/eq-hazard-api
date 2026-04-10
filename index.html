@@ -290,17 +290,36 @@
                 </div>
                 <div>
                     <h3 data-i18n="bldgModelTitle" style="font-size:.88rem;color:var(--text-secondary);margin-bottom:8px;padding-bottom:6px;border-bottom:1px solid var(--border-color)">バイリニアモデル概要</h3>
-                    <div style="font-family:monospace;font-size:.8rem;line-height:1.5;padding:12px;background:var(--bg-table-th);border-radius:6px;color:var(--text-secondary);white-space:pre">  Q |                    / K2=&alpha;&middot;K1
-    |                  /
- Qy |----------------/
-    |            /   |
-    |          /     |   K1
-    |        /       |
-    |      /         |
-    |    /           |
-    |  /             |
-  --+--------+-------+--&gt; &delta;
-    |       &delta;y     &delta;max</div>
+                    <div style="padding:16px 12px;background:var(--bg-table-th);border-radius:6px;text-align:center">
+                        <svg viewBox="0 0 300 210" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:360px;height:auto">
+                            <!-- Axes -->
+                            <line x1="45" y1="185" x2="45" y2="12" stroke="var(--text-secondary)" stroke-width="1.5"/>
+                            <line x1="45" y1="185" x2="290" y2="185" stroke="var(--text-secondary)" stroke-width="1.5"/>
+                            <polygon points="45,12 41,20 49,20" fill="var(--text-secondary)"/>
+                            <polygon points="290,185 282,181 282,189" fill="var(--text-secondary)"/>
+                            <!-- Bilinear backbone -->
+                            <polyline points="45,185 180,68 268,48" fill="none" stroke="var(--accent)" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
+                            <!-- Qy dashed horizontal -->
+                            <line x1="10" y1="68" x2="180" y2="68" stroke="var(--text-muted)" stroke-width="1" stroke-dasharray="4,3"/>
+                            <!-- δy dashed vertical -->
+                            <line x1="180" y1="68" x2="180" y2="185" stroke="var(--text-muted)" stroke-width="1" stroke-dasharray="4,3"/>
+                            <!-- δmax dashed vertical -->
+                            <line x1="268" y1="48" x2="268" y2="185" stroke="var(--text-muted)" stroke-width="1" stroke-dasharray="4,3"/>
+                            <!-- Yield point dot -->
+                            <circle cx="180" cy="68" r="4" fill="var(--accent)"/>
+                            <!-- Axis labels -->
+                            <text x="35" y="10" text-anchor="middle" fill="var(--text-secondary)" font-size="14" font-weight="600" font-style="italic">Q</text>
+                            <text x="295" y="190" fill="var(--text-secondary)" font-size="14" font-weight="600" font-style="italic">δ</text>
+                            <!-- Value labels -->
+                            <text x="8" y="62" fill="var(--text-secondary)" font-size="12" font-style="italic">Qy</text>
+                            <text x="180" y="202" text-anchor="middle" fill="var(--text-secondary)" font-size="11" font-style="italic">δy</text>
+                            <text x="268" y="202" text-anchor="middle" fill="var(--text-secondary)" font-size="11" font-style="italic">δmax</text>
+                            <!-- K1 label along slope -->
+                            <text x="98" y="140" fill="var(--accent)" font-size="13" font-weight="600" transform="rotate(-41,98,140)">K1</text>
+                            <!-- K2 label -->
+                            <text x="208" y="38" fill="var(--accent)" font-size="12" font-weight="600">K2 = α·K1</text>
+                        </svg>
+                    </div>
                     <div class="building-note" data-i18n="bldgNote">
                         本ツールは簡易的な地震リスク概算を目的としています。等価1質点バイリニアモデルと等価線形化法による推定であり、詳細な評価には多質点系モデルによる時刻歴応答解析が必要です。
                     </div>
